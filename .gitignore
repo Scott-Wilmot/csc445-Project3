@@ -3,3 +3,4 @@ target/
 /run.bat
 /run.sh
 src/main/java/com/mycompany/app/App.class
+.idea/
