@@ -4,18 +4,16 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.net.*;
 
-public class Server implements Runnable {
-    public static int PORT = 26882;
+public class Host implements Runnable {
+    public static int PORT = 8080;
 
     public static void runServer() {
         int maxBufferSize = 8;
-        try (DatagramSocket serverSocket = new DatagramSocket(26882)) {
+        try (DatagramSocket serverSocket = new DatagramSocket(8080)) {
             System.out.println("Datagram Listening...");
             try {
                 DatagramPacket packet = new DatagramPacket(new byte[maxBufferSize], maxBufferSize);
-                System.out.println("waiting on receive");
                 serverSocket.receive(packet);
-                System.out.println("received");
 
                 maxBufferSize = packet.getLength();
                 byte[] data = packet.getData();
@@ -36,6 +34,10 @@ public class Server implements Runnable {
 
     @Override
     public void run() {
+        runServer();
+    }
+
+    public static void main(String[] args) {
         runServer();
     }
 }
