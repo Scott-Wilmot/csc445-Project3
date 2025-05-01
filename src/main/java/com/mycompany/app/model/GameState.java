@@ -1,8 +1,7 @@
 package com.mycompany.app.model;
 
 import java.io.Serializable;
-import java.util.ArrayDeque;
-import java.util.Deque;
+import java.util.*;
 
 /**
  * GameState class for keeping track of game information, should be shared among players after everybody has connected and game has started
@@ -12,13 +11,13 @@ public class GameState implements Serializable {
     private int player_count;
     private int current_turn;
     private Deque<Card> deck;
-    private Deque<Card> discard_pile;
+    private Deque<Card> discardPile;
 
     public GameState() {
         player_count = 0;
         current_turn = 0;
         deck = new ArrayDeque<>();
-        discard_pile = new ArrayDeque<>();
+        discardPile = new ArrayDeque<>();
     }
 
     /**
@@ -43,12 +42,26 @@ public class GameState implements Serializable {
         return current_turn;
     }
 
+    /**
+     *
+     */
     public void initializeDeck() {
 
     }
 
+    /**
+     * Transforms the discard pile into the draw deck. It is used when all the cards from the draw deck have been drawn, but the
+     * game has not ended. To continue the game, you reuse the discard pile as the draw pile. Shuffling allows for more randomized
+     * gameplay.
+     * <p/>
+     * @modifies {@link #deck} by filling with the values from {@link #discardPile}. Clears {@link #discardPile}
+     */
     public void reshuffleDeck() {
+        List<Card> reshuffledDeck = new ArrayList<>(discardPile);
+        Collections.shuffle(reshuffledDeck);
 
+        discardPile.clear();
+        deck = new ArrayDeque<>(reshuffledDeck);
     }
 
     /**
@@ -65,7 +78,12 @@ public class GameState implements Serializable {
      * @param card Card object offered from player class calling this method, player MUST remove card from their own hand upon calling this method
      */
     public void discardCard(Card card) {
-        discard_pile.push(card);
+        discardPile.push(card);
+    }
+
+    public static void main(String[] args) {
+        GameState gameState = new GameState();
+
     }
 
 }
