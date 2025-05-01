@@ -13,6 +13,9 @@ public class GameState implements Serializable {
     private Deque<Card> deck;
     private Deque<Card> discardPile;
 
+    /**
+     *
+     */
     public GameState() {
         player_count = 0;
         current_turn = 0;
@@ -43,9 +46,22 @@ public class GameState implements Serializable {
     }
 
     /**
-     *
+     * Creating a deck of all the possible cards.
+     * </p>
+     * @modifies deck
      */
     public void initializeDeck() {
+
+    }
+
+    /**
+     * When the game starts, every player must be dealt an x amount of cards.
+     * <p/>
+     *
+     * @param numCards - the number of cards to deal to each player. numCards must be less than [totalCards / numPlayers]
+     */
+    public void dealDeck(int numCards) {
+        // implementation halted until we know how we are managing the user class
 
     }
 
@@ -54,6 +70,7 @@ public class GameState implements Serializable {
      * game has not ended. To continue the game, you reuse the discard pile as the draw pile. Shuffling allows for more randomized
      * gameplay.
      * <p/>
+     *
      * @modifies {@link #deck} by filling with the values from {@link #discardPile}. Clears {@link #discardPile}
      */
     public void reshuffleDeck() {
@@ -65,20 +82,71 @@ public class GameState implements Serializable {
     }
 
     /**
-     * Pops the top card off of the deck and returns it for the calling player object to place the card into their own hand
-     * @param card
-     * @return
+     * When the activeUser has one card, they are required to call 445.
+     * If the activeUser calls 445 when they have one card in their hand, then the game may proceed to the next turn.
+     * If the activeUser does not call 445 and another user does not catch it, then the game may proceed to the next turn.
+     * If the activeUser does not call 445 and another user catches it, then the activeUser must pick up two cards to their hand.
+     * <p/>
+     *
+     * @modifies [player] so that 445 has been set to true
      */
-    public Card drawCard(Card card) {
-        return deck.pop();
+    public void call445() {
+        // implementation halted until we know how we are managing the user class
+    }
+
+    /**
+     * Works in relation to {@link #call445()}
+     * If the activeUser fails to call 445 when they have one card left in their hand, then any other user may call this method.
+     * When this method is called, the activeUser must pick up two cards.
+     * <p/>
+     *
+     * @param player - the activeUser who must pick up the card
+     */
+    public void catchFailed445(Player player) {
+        // implementation halted until we know how we are managing the user class
+        // note for future: for now, we don't plan on incorrectly calling 445, so there is no need to keep track of who called it
+    }
+
+    /**
+     * This is the main game flow for the game.
+     * When it is the activeUser's turn, they are required to place a card that matches either the Card's color or value.
+     * If the user is unable to place a valid card, they are required to pull one card from the deck.
+     * &#9; If the card pulled from the deck is a valid card, they may place the card down and end their turn.
+     * &#9; If the card pulled from the deck is not a valid card, they must keep the card in their hand and end their turn.
+     *
+     * @param player - the activeUser who is required to play this turn
+     * @param card   - the card that they are placing down
+     */
+    public void placeCard(Player player, Card card) {
+        // implementation halted until we know how we are managing the user class
+        /*
+        If I have valid card, I may place a card.
+        else, I must pull from the deck
+                if the deck gave me a valid card, i may play it
+                if the deck did not give me a valid card, i must keep it
+         */
+    }
+
+    /**
+     * Pops the top card(s) off of the deck and returns it for the calling player object to place the card into their own hand
+     *
+     * @param player - the activeUser drawing the cards
+     * @param drawAmount - the number of cards to draw (can only be 1 or multiples of 2)
+     * @return an array of cards from the deck, usually 1, can be multiples of 2 under special conditions
+     */
+    public Card[] drawCard(Player player, int drawAmount) {
+        return new Card[]{deck.pop()};
+        // remember to add user logic where we add it to the correct user
     }
 
     /**
      * Adds a offered card to the discard pile
+     *
      * @param card Card object offered from player class calling this method, player MUST remove card from their own hand upon calling this method
      */
     public void discardCard(Card card) {
         discardPile.push(card);
+        // remember to add user logic where we add it to the correct user
     }
 
     public static void main(String[] args) {
