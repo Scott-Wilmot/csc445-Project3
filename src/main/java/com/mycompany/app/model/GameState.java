@@ -46,9 +46,23 @@ public class GameState implements Serializable {
     }
 
     /**
-     *
+     * Creating a deck of all the possible cards.
+     * </p>
+     * @modifies deck
      */
     public void initializeDeck() {
+
+    }
+
+    /**
+     * When the game starts, every player must be dealt an x amount of cards.
+     * <p/>
+     *
+     * @param numCards - the number of cards to deal to each player. numCards must be less than [totalCards / numPlayers]
+     */
+    public void dealDeck(int numCards) {
+        // implementation halted until we know how we are managing the user class
+
     }
 
     /**
@@ -113,15 +127,15 @@ public class GameState implements Serializable {
          */
     }
 
-
     /**
-     * Pops the top card off of the deck and returns it for the calling player object to place the card into their own hand
+     * Pops the top card(s) off of the deck and returns it for the calling player object to place the card into their own hand
      *
-     * @param card
-     * @return
+     * @param player - the activeUser drawing the cards
+     * @param drawAmount - the number of cards to draw (can only be 1 or multiples of 2)
+     * @return an array of cards from the deck, usually 1, can be multiples of 2 under special conditions
      */
-    public Card drawCard(Card card, Player player) {
-        return deck.pop();
+    public Card[] drawCard(Player player, int drawAmount) {
+        return new Card[]{deck.pop()};
         // remember to add user logic where we add it to the correct user
     }
 
