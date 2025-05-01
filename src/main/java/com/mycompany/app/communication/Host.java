@@ -1,46 +1,41 @@
 package com.mycompany.app.communication;
 
+import com.mycompany.app.model.GameState;
+
 import java.io.EOFException;
 import java.io.IOException;
 import java.net.*;
 
-public class Host implements Runnable {
-    public static int PORT = 8080;
+public class Host {
 
-    public static void runServer() {
-        int maxBufferSize = 8;
-        try (DatagramSocket serverSocket = new DatagramSocket(8080)) {
-            System.out.println("Datagram Listening...");
-            for (;;) {
-                try {
-                    DatagramPacket packet = new DatagramPacket(new byte[maxBufferSize], maxBufferSize);
-                    serverSocket.receive(packet);
+    GameState gameState;
 
-                    maxBufferSize = packet.getLength();
-                    byte[] data = packet.getData();
-                    System.out.println("Decoded byte array: " + data.length);
-                    DatagramPacket responsePacket = new DatagramPacket(
-                            data, maxBufferSize, packet.getAddress(), packet.getPort());
-                    System.out.println(packet.getAddress() + ":" + packet.getPort());
-                    serverSocket.send(responsePacket);
-                } catch (EOFException e) {
-                    System.out.println("Client disconnected.");
-                } catch (IOException e) {
-                    System.err.println("Error reading from client: " + e.getMessage());
-                }
-            }
-        } catch (SocketException e) {
-            System.err.println("Socket failure");
-            throw new RuntimeException(e);
-        }
+    Host() throws IOException {
+
     }
 
-    @Override
-    public void run() {
-        runServer();
+    public static void main(String[] args) throws IOException {
+        Host host = new Host();
     }
 
-    public static void main(String[] args) {
-        runServer();
+    public void open_lobby() throws IOException {
+        ServerSocket socketMaker = new ServerSocket(0);
+
+        // Accept new connections until game starts or player limit reached
+
+        socketMaker.close();
     }
+
+    public void accept_client() {
+
+    }
+
+    public void start_game() {
+
+    }
+
+    public void update_clients() {
+
+    }
+
 }
