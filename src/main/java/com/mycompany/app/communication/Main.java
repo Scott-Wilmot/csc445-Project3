@@ -4,7 +4,7 @@ public class Main {
     public static void main(String[] args) {
 
         new Thread(new Host()).start();
-        new Thread(new Client()).start();
+//        new Thread(new Client()).start();
 
     }
 }

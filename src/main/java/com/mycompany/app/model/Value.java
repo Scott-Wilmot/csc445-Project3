@@ -1,0 +1,5 @@
+package com.mycompany.app.model;
+
+public enum Value {
+    PAPRIKA, VALENCIA, JAFFA, KOROMIKO, SALOMIE, BUTTERFLY_BUSH, PARADISO, TRADEWIND, MOSS_GREEN, SANDWISP,
+}

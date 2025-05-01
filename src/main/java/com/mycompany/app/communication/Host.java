@@ -11,20 +11,23 @@ public class Host implements Runnable {
         int maxBufferSize = 8;
         try (DatagramSocket serverSocket = new DatagramSocket(8080)) {
             System.out.println("Datagram Listening...");
-            try {
-                DatagramPacket packet = new DatagramPacket(new byte[maxBufferSize], maxBufferSize);
-                serverSocket.receive(packet);
+            for (;;) {
+                try {
+                    DatagramPacket packet = new DatagramPacket(new byte[maxBufferSize], maxBufferSize);
+                    serverSocket.receive(packet);
 
-                maxBufferSize = packet.getLength();
-                byte[] data = packet.getData();
-                System.out.println("Decoded byte array: " + data.length);
-                DatagramPacket responsePacket = new DatagramPacket(
-                        data, maxBufferSize, packet.getAddress(), packet.getPort());
-                serverSocket.send(responsePacket);
-            } catch (EOFException e) {
-                System.out.println("Client disconnected.");
-            } catch (IOException e) {
-                System.err.println("Error reading from client: " + e.getMessage());
+                    maxBufferSize = packet.getLength();
+                    byte[] data = packet.getData();
+                    System.out.println("Decoded byte array: " + data.length);
+                    DatagramPacket responsePacket = new DatagramPacket(
+                            data, maxBufferSize, packet.getAddress(), packet.getPort());
+                    System.out.println(packet.getAddress() + ":" + packet.getPort());
+                    serverSocket.send(responsePacket);
+                } catch (EOFException e) {
+                    System.out.println("Client disconnected.");
+                } catch (IOException e) {
+                    System.err.println("Error reading from client: " + e.getMessage());
+                }
             }
         } catch (SocketException e) {
             System.err.println("Socket failure");
