@@ -15,6 +15,7 @@ public class GameState implements Serializable {
     private int currentTurn;
     private int cardStackCounter;
     private boolean stackActive;
+    private boolean skipActive;
     private boolean turnOrderReversed;
     private Deque<Card> deck;
     private Deque<Card> discardPile;
@@ -30,6 +31,7 @@ public class GameState implements Serializable {
         currentTurn = 0;
         cardStackCounter = 0;
         stackActive = false;
+        skipActive = false;
         turnOrderReversed = false;
         initializeDeck();
         discardPile = new ArrayDeque<>();
@@ -107,9 +109,10 @@ public class GameState implements Serializable {
         if (turnOrderReversed) {
             currentTurn = (currentTurn - 1) % playerCount;
             if (currentTurn == -1) currentTurn = playerCount - 1;
-            return;
+        } else {
+            currentTurn = (currentTurn + 1) % playerCount;
         }
-        currentTurn = (currentTurn + 1) % playerCount;
+        initializeTurn();
     }
 
     public int getCurrentTurn() {
@@ -232,12 +235,15 @@ public class GameState implements Serializable {
                 // add logic to allow the player to play another card since it reverses back to them
 
             } else if (card.shape() == Shape.SKIP) {
-                // add logic for skip
+                // When the activePlayer plays a skip card, the next player's turn is skipped.
+                skipActive = true;
 
             }
         }
 
         // end turn
+        nextTurn();
+        initializeTurn();
     }
 
     /**
@@ -245,43 +251,40 @@ public class GameState implements Serializable {
      *
      * @param player     - the activePlayer drawing the cards
      * @param drawAmount - the number of cards to draw (can only be 1 or multiples of 2)
-     * @return an array of cards from the deck, usually 1, can be multiples of 2 under special conditions
+     * @modifies {@link Player}'s hand by adding drawAmount card
      */
-    public Card[] drawCard(Player player, int drawAmount) {
-        return new Card[]{deck.pop()};
-        // remember to add player logic where we add it to the correct player
+    public void drawCard(Player player, int drawAmount) {
+        if (drawAmount == 1) {
+            player.addCard(deck.removeFirst());
+            return;
+        }
+        for (int i = 0; i < drawAmount; i++) {
+            player.addCard(deck.removeFirst());
+        }
     }
 
     /**
-     * When the activePlayer plays a skip card, the next player's turn is skipped.
+     * Process everything before the start of a player's turn.
      */
-    public void skipPlayer() {
-        // implementation awaiting
-    }
-
-    /**
-     * Process everything before the start of your turn.
-     */
+    // TODO: add +2 stacking. currently, you can't stack.
     public void initializeTurn() {
         // 1: pick up cards
         if (stackActive) {
+            // how will i handle stacking?
+            // a player can choose to not stack and pick up 2
+            // or a player can choose to stack +2 and send it to the next person
+            // or a player isn't able to stack, so must pick up 2 cards
+            // for now, i'm disabling stacking on stacking until the game is complete
             drawCard(players.get(currentTurn), cardStackCounter);
+
+            nextTurn();
+            initializeTurn();
+        } else if (skipActive) {
+            // 2: skip cards
+            skipActive = false;
+            nextTurn();
+            initializeTurn();
         }
-
-        // 2: skip cards
-
-
-        // 3:
-    }
-
-    /**
-     * Adds a offered card to the discard pile
-     *
-     * @param card Card object offered from player class calling this method, player MUST remove card from their own hand upon calling this method
-     */
-    public void discardCard(Card card) {
-        discardPile.push(card);
-        // remember to add player logic where we add it to the correct player
     }
 
     private void resetGame() {

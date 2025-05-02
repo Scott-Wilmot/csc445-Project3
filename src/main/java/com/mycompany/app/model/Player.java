@@ -26,6 +26,10 @@ public class Player {
         this.id = id;
     }
 
+    void addCard(Card card) {
+        playerHand.add(card);
+    }
+
     void removeCard(Card card) {
         playerHand.remove(card);
     }
