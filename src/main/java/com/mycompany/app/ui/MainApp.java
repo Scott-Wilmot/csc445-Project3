@@ -14,15 +14,9 @@ public class MainApp extends Application {
 
 
     @Override
-    public void start(Stage primaryStage) throws IOException {
-        URL fxmlUrl = getClass().getResource("/com/mycompany/app/ui/MainView.fxml");
-        System.out.println("FXML URL: " + fxmlUrl);
-
-        Parent root = FXMLLoader.load(Objects.requireNonNull(fxmlUrl));
-
-        primaryStage.setTitle("Scene Builder Example");
-        primaryStage.setScene(new Scene(root));
-        primaryStage.show();
+    public void start(Stage primaryStage) throws Exception {
+        SceneSwitcher sceneSwitcher = new SceneSwitcher(primaryStage);
+        sceneSwitcher.switchScene("/fxmlViews/MainView.fxml");
     }
 
     public static void main(String[] args) {
