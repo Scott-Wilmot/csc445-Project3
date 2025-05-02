@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Player {
-    int playerID;
+    int id;
     List<Card> playerHand;
     InetAddress playerAddress;
 
@@ -22,8 +22,15 @@ public class Player {
         this.playerHand = playerHand;
     }
 
-    public void setPlayerID(int playerID) {
-        this.playerID = playerID;
+    public void setPlayerID(int id) {
+        this.id = id;
     }
 
+    void removeCard(Card card) {
+        playerHand.remove(card);
+    }
+
+    public int getID() {
+        return id;
+    }
 }

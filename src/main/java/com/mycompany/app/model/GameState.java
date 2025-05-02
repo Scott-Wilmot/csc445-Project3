@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * GameState class for keeping track of game information, should be shared among players after everybody has connected and game has started
@@ -12,6 +13,9 @@ public class GameState implements Serializable {
 
     private int playerCount;
     private int currentTurn;
+    private int cardStackCounter;
+    private boolean stackActive;
+    private boolean turnOrderReversed;
     private Deque<Card> deck;
     private Deque<Card> discardPile;
     private Map<Integer, Player> players;
@@ -24,6 +28,9 @@ public class GameState implements Serializable {
     public GameState() {
         playerCount = 0;
         currentTurn = 0;
+        cardStackCounter = 0;
+        stackActive = false;
+        turnOrderReversed = false;
         initializeDeck();
         discardPile = new ArrayDeque<>();
         players = new HashMap<>();
@@ -86,19 +93,28 @@ public class GameState implements Serializable {
         // TODO: error handling: what if the first card is a +2
         // todo: complete placing first before moving forward with this
         discardPile.add(deck.removeFirst());
+
+        // start the game with a random player
+        currentTurn = ThreadLocalRandom.current().nextInt(playerCount);
     }
 
     /**
-     * Increments the turn number, meant to represent a player id, and modulo's current turn to return to first player from last players turn
+     * Determine the next player's turn.
+     * Normally, it would increment the player turn by one and repeat in a cycle.
+     * If a reverse card has been played, then it decrements the player turn and repeats in a cycle.
      */
     public void nextTurn() {
-        currentTurn = currentTurn++ % playerCount;
+        if (turnOrderReversed) {
+            currentTurn = (currentTurn - 1) % playerCount;
+            if (currentTurn == -1) currentTurn = playerCount - 1;
+            return;
+        }
+        currentTurn = (currentTurn + 1) % playerCount;
     }
 
     public int getCurrentTurn() {
         return currentTurn;
     }
-
 
     /**
      * Deal cards to a single player.
@@ -181,14 +197,47 @@ public class GameState implements Serializable {
      * @param player - the activePlayer who is required to play this turn
      * @param card   - the card that they are placing down
      */
+
+    // LOGIC:
+    // Wild Card: Complete
+    // Reverse: 1/2 complete
+    // +2: TODO
     public void placeCard(Player player, Card card) {
-        // implementation halted until we know how we are managing the player class
-        /*
-        If I have valid card, I may place a card.
-        else, I must pull from the deck
-                if the deck gave me a valid card, i may play it
-                if the deck did not give me a valid card, i must keep it
-         */
+
+        // fail conditions:
+        // 1. Not valid card
+        // 2. Not your turn
+        if (card.shape() != discardPile.peekLast().shape() && card.value() != discardPile.peekLast().value()) {
+            System.out.println("Not a valid card");
+            return;
+        }
+        if (currentTurn != player.getID()) {
+            return;
+        }
+
+        // pass conditions
+        if (card.shape() == discardPile.peekLast().shape()
+                || card.value() == discardPile.peekLast().value()
+                || card.shape() == Shape.WILD) {
+            discardPile.addLast(card);
+            player.removeCard(card);
+
+            // maybe take care of special conditions after the initial card is added
+            if (card.shape() == Shape.DRAW_TWO) {
+                // add logic for +2
+                cardStackCounter += 2;
+                stackActive = true;
+            } else if (card.shape() == Shape.REVERSE) {
+                turnOrderReversed = !turnOrderReversed;
+                // add logic to allow the player to play another card since it reverses back to them
+
+            } else if (card.shape() == Shape.SKIP) {
+                // add logic for skip
+
+            }
+        }
+
+        // end turn
     }
 
     /**
@@ -208,6 +257,21 @@ public class GameState implements Serializable {
      */
     public void skipPlayer() {
         // implementation awaiting
+    }
+
+    /**
+     * Process everything before the start of your turn.
+     */
+    public void initializeTurn() {
+        // 1: pick up cards
+        if (stackActive) {
+            drawCard(players.get(currentTurn), cardStackCounter);
+        }
+
+        // 2: skip cards
+
+
+        // 3:
     }
 
     /**
@@ -253,11 +317,11 @@ public class GameState implements Serializable {
         Player player3 = new Player(inetAddress);
         Player player4 = new Player(inetAddress);
 
-        game.addPlayer(1, player);
-        game.addPlayer(2, player2);
-        game.addPlayer(3, player3);
+        game.addPlayer(0, player);
+        game.addPlayer(1, player2);
+        game.addPlayer(2, player3);
 //        game.addPlayer(2, player);
-        game.addPlayer(4, player4);
+        game.addPlayer(3, player4);
 
 //        game.dealDeck(1);
 //        game.dealDeck(2);
@@ -273,6 +337,30 @@ public class GameState implements Serializable {
         System.out.println(player4.getPlayerHand());
 
         System.out.println(game.getDiscardPile());
+
+
+        game.currentTurn = 3;
+        System.out.println(game.currentTurn);
+        game.nextTurn();
+        System.out.println(game.currentTurn);
+
+        game.turnOrderReversed = true;
+        game.nextTurn();
+        System.out.println(game.currentTurn);
+        game.nextTurn();
+        System.out.println(game.currentTurn);
+        game.nextTurn();
+        System.out.println(game.currentTurn);
+        game.nextTurn();
+        System.out.println(game.currentTurn);
+
+        game.turnOrderReversed = false;
+        game.nextTurn();
+        System.out.println(game.currentTurn);
+        game.nextTurn();
+        System.out.println(game.currentTurn);
+        game.nextTurn();
+        System.out.println(game.currentTurn);
 
 
 //        System.out.println(gameState.getDeck());
