@@ -1,6 +1,8 @@
 package com.mycompany.app.model;
 
 import java.io.Serializable;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.*;
 
 /**
@@ -8,61 +10,123 @@ import java.util.*;
  */
 public class GameState implements Serializable {
 
-    private int player_count;
-    private int current_turn;
+    private int playerCount;
+    private int currentTurn;
     private Deque<Card> deck;
     private Deque<Card> discardPile;
+    private Map<Integer, Player> players;
+
+    private static final int NUM_CARDS_DEALT = 7;
 
     /**
      *
      */
     public GameState() {
-        player_count = 0;
-        current_turn = 0;
-        deck = new ArrayDeque<>();
+        playerCount = 0;
+        currentTurn = 0;
+        initializeDeck();
         discardPile = new ArrayDeque<>();
+        players = new HashMap<>();
+    }
+
+    /**
+     * Creating a deck of all the possible cards.
+     * A deck is composed of 10 values and 8 shapes.
+     * 10 shapes × 8 values = 80 unique cards * 2 = 160 total cards
+     * </p>
+     *
+     * @modifies deck so that it contains 180 cards in random order
+     */
+    private void initializeDeck() {
+        ArrayList<Card> cards = new ArrayList<>();
+        for (Shape shape : Shape.values()) {
+            for (Value value : Value.values()) {
+                cards.add(new Card(shape, value));
+                cards.add(new Card(shape, value));
+            }
+        }
+        Collections.shuffle(cards);
+        deck = new ArrayDeque<>(cards);
     }
 
     /**
      * Increment player count to account for a newly joined player. If max player count is already reached (4 players) return an exception
      */
-    public boolean addPlayer() {
-        if (player_count < 4) {
-            player_count++;
+    private boolean addPlayer(int playerId, Player player) {
+        if (playerCount < 4) {
+            if (players.containsKey(playerId)) {
+                System.err.println("Duplicate Player Detected.");
+                return false;
+            }
+            players.put(playerId, player);
+            playerCount++;
             return true;
         }
+        System.err.println("Max Players Reached");
         return false;
+    }
+
+    /**
+     * Remove player from the game. Decrements playerCount by 1.
+     * A player may leave at any point in the game. In all cases, this method's behavior will not change.
+     *
+     * @param playerId - the player exiting the game
+     */
+    private void removePlayer(int playerId) {
+        players.remove(playerId);
+        playerCount--;
+    }
+
+    /**
+     * Initializes the game state.
+     * In other words, deals the deck {@link #dealDeck()}, adds a non-wild card to the discard pile.
+     */
+    private void startGame() {
+        dealDeck();
+        // TODO: error handling: what if the first card is a +2
+        // todo: complete placing first before moving forward with this
+        discardPile.add(deck.removeFirst());
     }
 
     /**
      * Increments the turn number, meant to represent a player id, and modulo's current turn to return to first player from last players turn
      */
     public void nextTurn() {
-        current_turn = current_turn++ % player_count;
+        currentTurn = currentTurn++ % playerCount;
     }
 
     public int getCurrentTurn() {
-        return current_turn;
+        return currentTurn;
     }
 
-    /**
-     * Creating a deck of all the possible cards.
-     * </p>
-     * @modifies deck
-     */
-    public void initializeDeck() {
-
-    }
 
     /**
-     * When the game starts, every player must be dealt an x amount of cards.
+     * Deal cards to a single player.
      * <p/>
      *
-     * @param numCards - the number of cards to deal to each player. numCards must be less than [totalCards / numPlayers]
+     * @param playerID - the player retrieving the deck.
      */
-    public void dealDeck(int numCards) {
-        // implementation halted until we know how we are managing the user class
+    public void dealDeck(int playerID) {
+        List<Card> cards = new ArrayList<>();
+        for (int i = 0; i < NUM_CARDS_DEALT; i++) {
+            cards.add(deck.removeFirst());
+        }
+        players.get(playerID).setPlayerHand(cards);
+    }
 
+    /**
+     * Deal cards to every player in the game.
+     * Used for game start.
+     */
+    public void dealDeck() {
+        List<Card> cards = new ArrayList<>();
+        for (Player player : players.values()) {
+            for (int i = 0; i < NUM_CARDS_DEALT; i++) {
+                cards.add(deck.removeFirst());
+            }
+            player.setPlayerHand(new ArrayList<>(cards));
+            cards.clear();
+        }
     }
 
     /**
@@ -82,25 +146,25 @@ public class GameState implements Serializable {
     }
 
     /**
-     * When the activeUser has one card, they are required to call 445.
-     * If the activeUser calls 445 when they have one card in their hand, then the game may proceed to the next turn.
-     * If the activeUser does not call 445 and another user does not catch it, then the game may proceed to the next turn.
-     * If the activeUser does not call 445 and another user catches it, then the activeUser must pick up two cards to their hand.
+     * When the activePlayer has one card, they are required to call 445.
+     * If the activePlayer calls 445 when they have one card in their hand, then the game may proceed to the next turn.
+     * If the activePlayer does not call 445 and another player does not catch it, then the game may proceed to the next turn.
+     * If the activePlayer does not call 445 and another player catches it, then the activePlayer must pick up two cards to their hand.
      * <p/>
      *
      * @modifies [player] so that 445 has been set to true
      */
     public void call445() {
-        // implementation halted until we know how we are managing the user class
+        // implementation halted until we know how we are managing the player class
     }
 
     /**
      * Works in relation to {@link #call445()}
-     * If the activeUser fails to call 445 when they have one card left in their hand, then any other user may call this method.
-     * When this method is called, the activeUser must pick up two cards.
+     * If the activePlayer fails to call 445 when they have one card left in their hand, then any other player may call this method.
+     * When this method is called, the activePlayer must pick up two cards.
      * <p/>
      *
-     * @param player - the activeUser who must pick up the card
+     * @param player - the activePlayer who must pick up the card
      */
     public void catchFailed445(Player player) {
         // implementation halted until we know how we are managing the user class
@@ -109,16 +173,16 @@ public class GameState implements Serializable {
 
     /**
      * This is the main game flow for the game.
-     * When it is the activeUser's turn, they are required to place a card that matches either the Card's color or value.
-     * If the user is unable to place a valid card, they are required to pull one card from the deck.
+     * When it is the activePlayer's turn, they are required to place a card that matches either the Card's color or value.
+     * If the activePlayer is unable to place a valid card, they are required to pull one card from the deck.
      * &#9; If the card pulled from the deck is a valid card, they may place the card down and end their turn.
      * &#9; If the card pulled from the deck is not a valid card, they must keep the card in their hand and end their turn.
      *
-     * @param player - the activeUser who is required to play this turn
+     * @param player - the activePlayer who is required to play this turn
      * @param card   - the card that they are placing down
      */
     public void placeCard(Player player, Card card) {
-        // implementation halted until we know how we are managing the user class
+        // implementation halted until we know how we are managing the player class
         /*
         If I have valid card, I may place a card.
         else, I must pull from the deck
@@ -130,13 +194,20 @@ public class GameState implements Serializable {
     /**
      * Pops the top card(s) off of the deck and returns it for the calling player object to place the card into their own hand
      *
-     * @param player - the activeUser drawing the cards
+     * @param player     - the activePlayer drawing the cards
      * @param drawAmount - the number of cards to draw (can only be 1 or multiples of 2)
      * @return an array of cards from the deck, usually 1, can be multiples of 2 under special conditions
      */
     public Card[] drawCard(Player player, int drawAmount) {
         return new Card[]{deck.pop()};
-        // remember to add user logic where we add it to the correct user
+        // remember to add player logic where we add it to the correct player
+    }
+
+    /**
+     * When the activePlayer plays a skip card, the next player's turn is skipped.
+     */
+    public void skipPlayer() {
+        // implementation awaiting
     }
 
     /**
@@ -146,12 +217,64 @@ public class GameState implements Serializable {
      */
     public void discardCard(Card card) {
         discardPile.push(card);
-        // remember to add user logic where we add it to the correct user
+        // remember to add player logic where we add it to the correct player
     }
 
-    public static void main(String[] args) {
-        GameState gameState = new GameState();
-
+    private void resetGame() {
+        initializeDeck();
+        discardPile = new ArrayDeque<>();
     }
 
+
+    // TESTING
+    public Deque<Card> getDeck() {
+        return deck;
+    }
+
+    public int getPlayerCount() {
+        return playerCount;
+    }
+
+    public Deque<Card> getDiscardPile() {
+        return discardPile;
+    }
+
+    public Map<Integer, Player> getPlayers() {
+        return players;
+    }
+
+    public static void main(String[] args) throws UnknownHostException {
+        GameState game = new GameState();
+        System.out.println(game.getDeck().size());
+
+        InetAddress inetAddress = InetAddress.getByName("localhost");
+        Player player = new Player(inetAddress);
+        Player player2 = new Player(inetAddress);
+        Player player3 = new Player(inetAddress);
+        Player player4 = new Player(inetAddress);
+
+        game.addPlayer(1, player);
+        game.addPlayer(2, player2);
+        game.addPlayer(3, player3);
+//        game.addPlayer(2, player);
+        game.addPlayer(4, player4);
+
+//        game.dealDeck(1);
+//        game.dealDeck(2);
+//        game.dealDeck(3);
+//        game.dealDeck(4);
+
+//        game.dealDeck();
+
+        game.startGame();
+        System.out.println(player.getPlayerHand());
+        System.out.println(player2.getPlayerHand());
+        System.out.println(player3.getPlayerHand());
+        System.out.println(player4.getPlayerHand());
+
+        System.out.println(game.getDiscardPile());
+
+
+//        System.out.println(gameState.getDeck());
+    }
 }
