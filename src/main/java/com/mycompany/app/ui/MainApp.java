@@ -1,17 +1,31 @@
 package com.mycompany.app.ui;
 
 import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
 
-public  class MainApp extends Application {
+import java.io.IOException;
+import java.net.URL;
+import java.util.Objects;
+
+public class MainApp extends Application {
+
+
+    @Override
+    public void start(Stage primaryStage) throws IOException {
+        URL fxmlUrl = getClass().getResource("/com/mycompany/app/ui/MainView.fxml");
+        System.out.println("FXML URL: " + fxmlUrl);
+
+        Parent root = FXMLLoader.load(Objects.requireNonNull(fxmlUrl));
+
+        primaryStage.setTitle("Scene Builder Example");
+        primaryStage.setScene(new Scene(root));
+        primaryStage.show();
+    }
 
     public static void main(String[] args) {
         launch(args);
-    }
-
-    @Override
-    public void start(javafx.stage.Stage primaryStage) {
-        primaryStage.setTitle("JavaFX test");
-        primaryStage.setScene(new javafx.scene.Scene(new javafx.scene.layout.VBox(), 300, 275));
-        primaryStage.show();
     }
 }
