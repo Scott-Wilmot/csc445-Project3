@@ -197,7 +197,6 @@ public class GameState implements Serializable {
      * &#9; If the card pulled from the deck is a valid card, they may place the card down and end their turn.
      * &#9; If the card pulled from the deck is not a valid card, they must keep the card in their hand and end their turn.
      *
-     * @param player - the activePlayer who is required to play this turn
      * @param card   - the card that they are placing down
      */
 
@@ -205,7 +204,7 @@ public class GameState implements Serializable {
     // Wild Card: Complete
     // Reverse: 1/2 complete
     // +2: TODO
-    public void placeCard(Player player, Card card) {
+    public void placeCard(Card card) {
 
         // fail conditions:
         // 1. Not valid card
@@ -214,16 +213,16 @@ public class GameState implements Serializable {
             System.out.println("Not a valid card");
             return;
         }
-        if (currentTurn != player.getID()) {
-            return;
-        }
+//        if (currentTurn != player.getID()) {
+//            return;
+//        }
 
         // pass conditions
         if (card.shape() == discardPile.peekLast().shape()
                 || card.value() == discardPile.peekLast().value()
                 || card.shape() == Shape.WILD) {
             discardPile.addLast(card);
-            player.removeCard(card);
+            players.get(currentTurn).removeCard(card);
 
             // maybe take care of special conditions after the initial card is added
             if (card.shape() == Shape.DRAW_TWO) {
@@ -242,25 +241,46 @@ public class GameState implements Serializable {
         }
 
         // end turn
-        nextTurn();
-        initializeTurn();
+        endTurn();
     }
 
     /**
      * Pops the top card(s) off of the deck and returns it for the calling player object to place the card into their own hand
      *
-     * @param player     - the activePlayer drawing the cards
      * @param drawAmount - the number of cards to draw (can only be 1 or multiples of 2)
      * @modifies {@link Player}'s hand by adding drawAmount card
      */
-    public void drawCard(Player player, int drawAmount) {
+    public void drawCard(int drawAmount) {
+        // Cannot draw card more than once
+        if (players.get(currentTurn).hasDrawnCard()) return;
+
         if (drawAmount == 1) {
-            player.addCard(deck.removeFirst());
+            players.get(currentTurn).addCard(deck.removeFirst());
+            players.get(currentTurn).hasDrawnCard(true);
             return;
         }
         for (int i = 0; i < drawAmount; i++) {
-            player.addCard(deck.removeFirst());
+            players.get(currentTurn).addCard(deck.removeFirst());
         }
+    }
+
+    /**
+     * The game retrieves the active player's card.
+     * Used to access any methods that require a player card.
+     * @param index - the card that the player chooses from their hand
+     */
+    Card getActivePlayerCard(int index) {
+        return players.get(currentTurn).getCard(index);
+    }
+
+    /**
+     * Ends the active player's turn and passes it on to the next player. 
+     * Can be used by player to end their turn. 
+     * Accessed by methods after player action such as {@link #placeCard(Card)}.
+     */
+    void endTurn() {
+        nextTurn();
+        initializeTurn();
     }
 
     /**
@@ -268,6 +288,9 @@ public class GameState implements Serializable {
      */
     // TODO: add +2 stacking. currently, you can't stack.
     public void initializeTurn() {
+        // allow the player to draw card in their new turn
+        players.get(currentTurn).hasDrawnCard(false);
+
         // 1: pick up cards
         if (stackActive) {
             // how will i handle stacking?
@@ -275,15 +298,14 @@ public class GameState implements Serializable {
             // or a player can choose to stack +2 and send it to the next person
             // or a player isn't able to stack, so must pick up 2 cards
             // for now, i'm disabling stacking on stacking until the game is complete
-            drawCard(players.get(currentTurn), cardStackCounter);
+            drawCard(cardStackCounter);
+            stackActive = false;
 
-            nextTurn();
-            initializeTurn();
+            endTurn();
         } else if (skipActive) {
             // 2: skip cards
             skipActive = false;
-            nextTurn();
-            initializeTurn();
+            endTurn();
         }
     }
 
@@ -323,49 +345,40 @@ public class GameState implements Serializable {
         game.addPlayer(0, player);
         game.addPlayer(1, player2);
         game.addPlayer(2, player3);
-//        game.addPlayer(2, player);
         game.addPlayer(3, player4);
 
-//        game.dealDeck(1);
-//        game.dealDeck(2);
-//        game.dealDeck(3);
-//        game.dealDeck(4);
-
-//        game.dealDeck();
 
         game.startGame();
         System.out.println(player.getPlayerHand());
         System.out.println(player2.getPlayerHand());
         System.out.println(player3.getPlayerHand());
         System.out.println(player4.getPlayerHand());
+        System.out.println("Discard Pile " + game.getDiscardPile());
 
-        System.out.println(game.getDiscardPile());
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Game Started: " + game.getCurrentTurn());
+        String input = "";
+        while (!input.equals("quit")) {
+            System.out.println("PLayer " + game.getCurrentTurn() + "'s turn");
+            input = scanner.nextLine();
+            if (input.equals("draw")) {
+                game.drawCard(1);
+                System.out.println();
+            }
 
+            if (input.equals("place")) {
+                int index = Integer.parseInt(scanner.nextLine());
+                game.placeCard(game.getActivePlayerCard(index));
+            }
 
-        game.currentTurn = 3;
-        System.out.println(game.currentTurn);
-        game.nextTurn();
-        System.out.println(game.currentTurn);
-
-        game.turnOrderReversed = true;
-        game.nextTurn();
-        System.out.println(game.currentTurn);
-        game.nextTurn();
-        System.out.println(game.currentTurn);
-        game.nextTurn();
-        System.out.println(game.currentTurn);
-        game.nextTurn();
-        System.out.println(game.currentTurn);
-
-        game.turnOrderReversed = false;
-        game.nextTurn();
-        System.out.println(game.currentTurn);
-        game.nextTurn();
-        System.out.println(game.currentTurn);
-        game.nextTurn();
-        System.out.println(game.currentTurn);
-
-
-//        System.out.println(gameState.getDeck());
+            if (input.equals("debug")) {
+                System.out.println(player.getPlayerHand());
+                System.out.println(player2.getPlayerHand());
+                System.out.println(player3.getPlayerHand());
+                System.out.println(player4.getPlayerHand());
+                System.out.println("Discard Pile " + game.getDiscardPile());
+            }
+        }
+        // Bug Founds: End turn button needed if the card you drew isn't valid either
     }
 }

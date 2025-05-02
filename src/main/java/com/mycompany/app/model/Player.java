@@ -9,9 +9,12 @@ public class Player {
     List<Card> playerHand;
     InetAddress playerAddress;
 
+    boolean cardDrawn;
+
     public Player(InetAddress playerAddress) {
         playerHand = new ArrayList<>();
         this.playerAddress = playerAddress;
+        cardDrawn = false;
     }
 
     public List<Card> getPlayerHand() {
@@ -34,7 +37,20 @@ public class Player {
         playerHand.remove(card);
     }
 
+    Card getCard(int index) {
+        return playerHand.get(index);
+    }
+
     public int getID() {
         return id;
+    }
+
+    // is this bad practice? setting the same name for setter and getter?
+    public boolean hasDrawnCard() {
+        return cardDrawn;
+    }
+
+    public void hasDrawnCard(boolean cardDrawn) {
+        this.cardDrawn = cardDrawn;
     }
 }
