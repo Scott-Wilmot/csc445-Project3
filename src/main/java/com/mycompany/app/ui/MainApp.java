@@ -15,10 +15,11 @@ public class MainApp extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        SceneSwitcher sceneSwitcher = new SceneSwitcher(primaryStage);
-        sceneSwitcher.switchScene("/fxmlViews/MainView.fxml");
-
-//        Stage stage = new Stage();
+        Parent pane = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/fxmlViews/MainView.fxml")));
+        Scene scene = new Scene(pane);
+        primaryStage.setScene(scene);
+        primaryStage.setTitle("Uno of soney");
+        primaryStage.show();
     }
 
     public static void main(String[] args) {
