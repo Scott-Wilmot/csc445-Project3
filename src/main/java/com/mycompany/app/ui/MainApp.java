@@ -17,6 +17,8 @@ public class MainApp extends Application {
     public void start(Stage primaryStage) throws Exception {
         SceneSwitcher sceneSwitcher = new SceneSwitcher(primaryStage);
         sceneSwitcher.switchScene("/fxmlViews/MainView.fxml");
+
+//        Stage stage = new Stage();
     }
 
     public static void main(String[] args) {

@@ -19,6 +19,7 @@ public class SceneSwitcher {
         Parent pane = FXMLLoader.load(Objects.requireNonNull(getClass().getResource(fxml)));
         Scene scene = new Scene(pane);
         stage.setScene(scene);
+        stage.setTitle("Uno of soney");
         stage.show();
     }
 }
