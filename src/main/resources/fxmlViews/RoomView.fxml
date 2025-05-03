@@ -12,5 +12,11 @@
             <Text fx:id="roomCodeId" strokeType="OUTSIDE" strokeWidth="0.0" text="ASDF" />
          </children>
       </HBox>
+      <HBox alignment="CENTER" layoutX="230.0" layoutY="40.0" prefHeight="22.0" prefWidth="141.0" spacing="10.0">
+         <children>
+            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Username" />
+            <Text fx:id="username" strokeType="OUTSIDE" strokeWidth="0.0" text="TestUsername" />
+         </children>
+      </HBox>
    </children>
 </AnchorPane>

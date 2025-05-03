@@ -16,7 +16,7 @@
                         <AnchorPane prefHeight="200.0" prefWidth="343.0">
                             <children>
                                 <Text layoutX="15.0" layoutY="33.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Name" />
-                                <TextField layoutX="15.0" layoutY="44.0" />
+                                <TextField fx:id="createRoomUsername" layoutX="15.0" layoutY="44.0" />
                                 <Text layoutX="15.0" layoutY="88.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Room Code" />
                                 <TextField fx:id="createRoomCode" layoutX="15.0" layoutY="99.0" />
                         <Button fx:id="createRoomButton" layoutX="125.0" layoutY="143.0" mnemonicParsing="false" onAction="#handleCreateRoomClick" text="Create Room" />
@@ -29,7 +29,7 @@
                   <AnchorPane prefHeight="200.0" prefWidth="343.0">
                      <children>
                         <Text layoutX="15.0" layoutY="33.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Name" />
-                        <TextField layoutX="15.0" layoutY="44.0" />
+                        <TextField fx:id="joinRoomUsername" layoutX="15.0" layoutY="44.0" />
                         <Text layoutX="15.0" layoutY="88.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Room Code" />
                         <TextField fx:id="joinRoomCode" layoutX="15.0" layoutY="99.0" />
                         <Button fx:id="joinRoomButton" layoutX="125.0" layoutY="143.0" mnemonicParsing="false" onAction="#handleJoinRoomClick" text="Join Room" />
