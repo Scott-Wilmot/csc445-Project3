@@ -205,7 +205,6 @@ public class GameState implements Serializable {
     // Reverse: 1/2 complete
     // +2: TODO
     public void placeCard(Card card) {
-
         // fail conditions:
         // 1. Not valid card
         // 2. Not your turn
@@ -213,9 +212,6 @@ public class GameState implements Serializable {
             System.out.println("Not a valid card");
             return;
         }
-//        if (currentTurn != player.getID()) {
-//            return;
-//        }
 
         // pass conditions
         if (card.shape() == discardPile.peekLast().shape()
@@ -238,6 +234,11 @@ public class GameState implements Serializable {
                 skipActive = true;
 
             }
+        }
+
+        // win condition
+        if (players.get(currentTurn).getPlayerHand().isEmpty()) {
+
         }
 
         // end turn
@@ -371,6 +372,10 @@ public class GameState implements Serializable {
                 game.placeCard(game.getActivePlayerCard(index));
             }
 
+            if (input.equals("skip")) {
+                game.endTurn();
+            }
+
             if (input.equals("debug")) {
                 System.out.println(player.getPlayerHand());
                 System.out.println(player2.getPlayerHand());
@@ -379,6 +384,5 @@ public class GameState implements Serializable {
                 System.out.println("Discard Pile " + game.getDiscardPile());
             }
         }
-        // Bug Founds: End turn button needed if the card you drew isn't valid either
     }
 }
