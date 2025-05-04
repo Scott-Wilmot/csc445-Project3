@@ -22,3 +22,8 @@ csc445-Project3/
     └── generated-sources/            
 
 ```
+
+## Running User Interface for JavaFX
+```java
+./mvnw javafx:run
+```
