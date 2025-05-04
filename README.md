@@ -11,13 +11,9 @@ csc445-Project3/
 │   ├── main/
 │   │   └── java/
 │   │       └── com/mycompany/app/
-│   │           ├── App.java               # Application entry point
-│   │           ├── controller/            # Controllers for game logic and scene flow
-│   │           ├── game/                  # Game engine, state management, and turn handling
-│   │           ├── model/                 # Core game entities (Card, Player, GameState)
-│   │           ├── net/                   # Server and client networking logic, message passing
-│   │           ├── ui/                    # JavaFX scenes, components, and layout
-│   │           └── utils/                 # Utility classes (e.g., Logger, Constants)
+│   │           ├── communication/
+│   │           ├── model
+│   │           ├── ui
 │   └── test/
 │       └── java/com/mycompany/app/
 │           └── AppTest.java             
