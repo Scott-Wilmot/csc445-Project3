@@ -71,7 +71,7 @@ public class MainController {
 
             RoomViewController controller = loader.getController();
             controller.setRoomCode(roomCode);
-            controller.setUsername(username); // ← Add this method if you want to use username in the next screen
+            controller.setUsername(username);
 
             Stage stage = (Stage) ((Button) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(root));
