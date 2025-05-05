@@ -26,8 +26,8 @@ public class GameState implements Serializable {
     /**
      *
      */
-    public GameState() {
-        playerCount = 0;
+    public GameState(int playerCount) {
+        this.playerCount = playerCount;
         currentTurn = 0;
         cardStackCounter = 0;
         stackActive = false;
