@@ -9,7 +9,7 @@
 
 <AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.mycompany.app.ui.uiController.MainController">
     <children>
-        <TabPane layoutX="129.0" layoutY="78.0" prefHeight="245.0" prefWidth="343.0" tabClosingPolicy="UNAVAILABLE">
+        <TabPane layoutX="129.0" layoutY="78.0" prefHeight="245.0" prefWidth="343.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="78.0" AnchorPane.leftAnchor="129.0" AnchorPane.rightAnchor="129.0" AnchorPane.topAnchor="78.0">
             <tabs>
                 <Tab text="Create Game">
                     <content>

@@ -5,3 +5,7 @@ target/
 src/main/java/com/mycompany/app/App.class
 .idea/
 **/logs.md
+
+src/main/resources/cardImages/
+
+.DS_Store
