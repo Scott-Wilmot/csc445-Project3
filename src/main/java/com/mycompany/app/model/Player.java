@@ -8,13 +8,15 @@ public class Player {
     int id;
     List<Card> playerHand;
     InetAddress playerAddress;
+    int port;
 
     boolean cardDrawn;
 
-    public Player(InetAddress playerAddress) {
+    public Player(InetAddress playerAddress, int port) {
         playerHand = new ArrayList<>();
         this.playerAddress = playerAddress;
         cardDrawn = false;
+        this.port = port;
     }
 
     public List<Card> getPlayerHand() {
@@ -43,6 +45,14 @@ public class Player {
 
     public int getID() {
         return id;
+    }
+
+    public InetAddress getAddress() {
+        return playerAddress;
+    }
+
+    public int getPort() {
+        return port;
     }
 
     // is this bad practice? setting the same name for setter and getter?
