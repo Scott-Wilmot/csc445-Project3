@@ -11,11 +11,8 @@ import javafx.scene.control.Control;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
-import jdk.jshell.execution.Util;
 
-import java.util.Random;
 
 public class RoomViewController {
 
@@ -30,10 +27,22 @@ public class RoomViewController {
     @FXML
     ImageView discardPile;
 
+    /**
+     * Adds a new card to the user card group and initializes its interaction behavior.
+     *
+     * This method generates a random card image, creates a new {@code ImageView} for
+     * displaying the card, and configures its behavior for interactions such as mouse
+     * clicks and hover effects. When the card is clicked, it triggers the discard action.
+     * Mouse hover actions move the card vertically for visual feedback.
+     *
+     * The card is added to the {@code userCardsGroup}, and the layout of the user's cards
+     * is reorganized after adding the new card.
+     *
+     * The method catches and logs any exceptions that occur during the process.
+     */
     @FXML
     private void addNewCard() {
         try {
-            System.out.println("at least it is clicked");
             ImageView imageView = new ImageView();
             Image image = new Image(CustomUtils.generateRandomCard());
             imageView.setImage(image);
@@ -58,12 +67,37 @@ public class RoomViewController {
 
     }
 
+    /**
+     * Discards a card from the user's hand and updates the discard pile.
+     *
+     * This method sets the image of the discard pile to the image of the card
+     * being discarded and removes the card from the user's hand. After the card
+     * is removed, the method reorganizes the layout of the remaining cards in
+     * the user's hand.
+     *
+     * @param event the mouse event triggered when the card is clicked
+     * @param imageView the ImageView representing the card to be discarded
+     */
     private void discardCard(MouseEvent event, ImageView imageView) {
         discardPile.setImage(imageView.getImage());
         userCardsGroup.getChildren().remove(imageView);
         organizeUserCards();
     }
 
+    /**
+     * Aligns the cards in the userCardsGroup evenly along the horizontal axis.
+     *
+     * This method calculates an appropriate distance to position each card in the
+     * userCardsGroup based on the total number of cards. It iterates through all
+     * the cards and sets their horizontal layout positions to ensure equal
+     * spacing, providing a visually balanced arrangement of cards.
+     *
+     * The spacing is calculated dynamically to adjust for changes in the number
+     * of cards, maintaining an even layout as cards are added or removed.
+     *
+     * This method is typically invoked after adding or removing cards
+     * to maintain the consistency of the user interface.
+     */
     private void organizeUserCards() {
         double layoutDistance = 300.0 / userCardsGroup.getChildren().size() + 1;
         double currentlayOutDistance = layoutDistance;
