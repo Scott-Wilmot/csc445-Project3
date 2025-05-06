@@ -333,52 +333,53 @@ public class GameState implements Serializable {
     }
 
     public static void main(String[] args) throws UnknownHostException {
-        GameState game = new GameState();
+        GameState game = new GameState(4);
         System.out.println(game.getDeck().size());
 
         InetAddress inetAddress = InetAddress.getByName("localhost");
-        Player player = new Player(inetAddress);
-        Player player2 = new Player(inetAddress);
-        Player player3 = new Player(inetAddress);
-        Player player4 = new Player(inetAddress);
+//        Player player = new Player(inetAddress);
+//        Player player2 = new Player(inetAddress);
+//        Player player3 = new Player(inetAddress);
+//        Player player4 = new Player(inetAddress);
 
-        game.addPlayer(0, player);
-        game.addPlayer(1, player2);
-        game.addPlayer(2, player3);
-        game.addPlayer(3, player4);
-
-
-        game.startGame();
-        System.out.println(player.getPlayerHand());
-        System.out.println(player2.getPlayerHand());
-        System.out.println(player3.getPlayerHand());
-        System.out.println(player4.getPlayerHand());
-        System.out.println("Discard Pile " + game.getDiscardPile());
-
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("Game Started: " + game.getCurrentTurn());
-        String input = "";
-        while (!input.equals("quit")) {
-            System.out.println("PLayer " + game.getCurrentTurn() + "'s turn");
-            input = scanner.nextLine();
-            if (input.equals("draw")) {
-                game.drawCard(1);
-                System.out.println();
-            }
-
-            if (input.equals("place")) {
-                int index = Integer.parseInt(scanner.nextLine());
-                game.placeCard(game.getActivePlayerCard(index));
-            }
-
-            if (input.equals("debug")) {
-                System.out.println(player.getPlayerHand());
-                System.out.println(player2.getPlayerHand());
-                System.out.println(player3.getPlayerHand());
-                System.out.println(player4.getPlayerHand());
-                System.out.println("Discard Pile " + game.getDiscardPile());
-            }
-        }
+//        game.addPlayer(0, player);
+//        game.addPlayer(1, player2);
+//        game.addPlayer(2, player3);
+//        game.addPlayer(3, player4);
+//
+//
+//
+//        game.startGame();
+//        System.out.println(player.getPlayerHand());
+//        System.out.println(player2.getPlayerHand());
+//        System.out.println(player3.getPlayerHand());
+//        System.out.println(player4.getPlayerHand());
+//        System.out.println("Discard Pile " + game.getDiscardPile());
+//
+//        Scanner scanner = new Scanner(System.in);
+//        System.out.println("Game Started: " + game.getCurrentTurn());
+//        String input = "";
+//        while (!input.equals("quit")) {
+//            System.out.println("PLayer " + game.getCurrentTurn() + "'s turn");
+//            input = scanner.nextLine();
+//            if (input.equals("draw")) {
+//                game.drawCard(1);
+//                System.out.println();
+//            }
+//
+//            if (input.equals("place")) {
+//                int index = Integer.parseInt(scanner.nextLine());
+//                game.placeCard(game.getActivePlayerCard(index));
+//            }
+//
+//            if (input.equals("debug")) {
+//                System.out.println(player.getPlayerHand());
+//                System.out.println(player2.getPlayerHand());
+//                System.out.println(player3.getPlayerHand());
+//                System.out.println(player4.getPlayerHand());
+//                System.out.println("Discard Pile " + game.getDiscardPile());
+//            }
+//        }
         // Bug Founds: End turn button needed if the card you drew isn't valid either
     }
 }
