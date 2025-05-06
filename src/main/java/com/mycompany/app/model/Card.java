@@ -13,4 +13,8 @@ public record Card(Shape shape, Value value) implements Serializable {
     public String toString() {
         return value + " " + shape;
     }
+
+    public String getFileName() {
+        return this.shape + "_" + this.value + ".png";
+    }
 }
