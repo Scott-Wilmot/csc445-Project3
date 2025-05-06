@@ -41,8 +41,8 @@ public class GameState implements Serializable {
 
     /**
      * Creating a deck of all the possible cards.
-     * A deck is composed of 10 values and 8 shapes.
-     * 10 shapes × 8 values = 80 unique cards * 2 = 160 total cards
+     * 10 shapes × 7 values = 70 cards (normal)
+     * Power Card = 4 x (+4 power cards) and one Wild Card
      * </p>
      *
      * @modifies deck so that it contains 180 cards in random order
