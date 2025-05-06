@@ -1,10 +1,7 @@
 package com.mycompany.app.testingenvironment;
 
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
+import java.net.*;
 import java.nio.ByteBuffer;
 
 import static com.mycompany.app.testingenvironment.Config.BUFFER_SIZE;
@@ -19,7 +16,8 @@ public class TestHost {
 
     void run() {
         try {
-            socket = new DatagramSocket(12345);
+            socket = new DatagramSocket(26880);
+//            socket.bind(new InetSocketAddress(InetAddress.getByName("localhost"),8081));
 
             for (;;) {
                 DatagramPacket packet = new DatagramPacket(buffer.array(), buffer.limit());
@@ -31,7 +29,7 @@ public class TestHost {
 
                 String message = new String(packet.getData(), 0, packet.getLength());
                 System.out.println("from: " + address.getHostAddress() + ":" + port + ": " + message);
-                packet = new DatagramPacket(buffer.array(), buffer.limit(), address, port);
+                packet = new DatagramPacket(message.getBytes(), message.length(), address, port);
                 socket.send(packet);
 
 //                buffer.flip();

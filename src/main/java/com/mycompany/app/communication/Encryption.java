@@ -1,4 +1,4 @@
-package com.mycompany.app.Encription;
+package com.mycompany.app.communication;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -6,6 +6,25 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import java.security.SecureRandom;
 
+/**
+ * For each message repeat this process:
+ * <p>
+ * Setup:
+ * <p>
+ * Generate a secret key (iv) using Encryption.generateKey()
+ * This key must be shared securely between sender and receiver before message communication.
+ * Sender Flow:
+ * <p>
+ * Create an IV using Encryption.generateIV().
+ * Encrypt the message using AES-CTR with the key + IV. → using Encryption.encrypt()
+ * Add the IV to the beginning of the encrypted message.
+ * Send via UDP.
+ * Receiver Flow:
+ * <p>
+ * Receive UDP packet.
+ * Split the first 16 bytes as IV. → The rest is the encrypted message.
+ * Decrypt using the same shared key and extracted IV. → using Encryption.decrypt()
+ */
 public class Encryption {
 
     public static SecretKey generateKey() throws Exception {
@@ -14,6 +33,7 @@ public class Encryption {
         return keyGen.generateKey();
     }
 
+    // generate a message each time
     public static byte[] generateIV() {
         byte[] iv = new byte[16];
         new SecureRandom().nextBytes(iv);

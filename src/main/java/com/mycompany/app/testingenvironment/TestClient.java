@@ -26,8 +26,10 @@ public class TestClient {
                 System.out.println("Enter a message to send to the client.");
                 String message = scanner.nextLine();
                 buffer.put(message.getBytes());
-                DatagramPacket packet = new DatagramPacket(message.getBytes(), message.length(), ip, 12345);
+                DatagramPacket packet = new DatagramPacket(buffer.array(), buffer.limit(), ip, 8080);
                 socket.send(packet);
+
+                System.out.println("sent packet");
 
                 socket.receive(packet);
                 String serverMessage = new String(packet.getData(), 0, packet.getLength());
@@ -46,7 +48,7 @@ public class TestClient {
     }
 
     public static void main(String[] args) throws UnknownHostException {
-        InetAddress ip = InetAddress.getByName("localhost");
+        InetAddress ip = InetAddress.getByName("cs.oswego.edu");
         TestClient testClient = new TestClient(ip);
         testClient.run();
     }

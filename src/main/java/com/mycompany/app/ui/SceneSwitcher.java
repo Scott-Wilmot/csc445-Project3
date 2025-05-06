@@ -22,4 +22,8 @@ public class SceneSwitcher {
         stage.setTitle("Uno of soney");
         stage.show();
     }
+
+    public static void main(String[] args) {
+        MainApp.main(args);
+    }
 }
