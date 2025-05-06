@@ -71,7 +71,7 @@ public class GameState implements Serializable {
     /**
      * Increment player count to account for a newly joined player. If max player count is already reached (4 players) return an exception
      */
-    private boolean addPlayer(int playerId, Player player) {
+    public boolean addPlayer(int playerId, Player player) {
         if (playerCount < MAX_PLAYERS) {
             if (players.containsKey(playerId)) {
                 System.err.println("Duplicate Player Detected.");
