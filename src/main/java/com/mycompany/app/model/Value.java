@@ -1,7 +1,5 @@
 package com.mycompany.app.model;
 
-import java.awt.*;
-
 public enum Value {
     A("a"),
     B("b"),
@@ -15,6 +13,18 @@ public enum Value {
     J("j"),
     W("w");
 
-    Value(String a) {
+    private final String value;
+
+    Value(String value) {
+        this.value = value;
+    }
+
+    public static Value fromString(String input) {
+        for (Value v : Value.values()) {
+            if (v.value.equals(input)) {
+                return v;
+            }
+        }
+        throw new IllegalArgumentException("No enum constant for value: " + input);
     }
 }

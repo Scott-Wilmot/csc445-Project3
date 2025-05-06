@@ -30,17 +30,17 @@
             <children>
                 <ImageView fitHeight="77.0" fitWidth="56.0" pickOnBounds="true" preserveRatio="true">
                     <image>
-                        <Image url="@../cardImages/W_BACK.png" />
+                        <Image url="@../cardImages/b_w.png" />
                     </image>
                 </ImageView>
                 <ImageView fitHeight="77.0" fitWidth="56.0" pickOnBounds="true" preserveRatio="true">
                     <image>
-                        <Image url="@../cardImages/W_BACK.png" />
+                        <Image url="@../cardImages/b_w.png" />
                     </image>
                 </ImageView>
                 <ImageView fitHeight="77.0" fitWidth="56.0" pickOnBounds="true" preserveRatio="true">
                     <image>
-                        <Image url="@../cardImages/W_BACK.png" />
+                        <Image url="@../cardImages/b_w.png" />
                     </image>
                 </ImageView>
             </children>
@@ -49,12 +49,12 @@
             <children>
                 <ImageView fx:id="discardPile" fitHeight="117.0" fitWidth="67.0" pickOnBounds="true" preserveRatio="true">
                     <image>
-                        <Image url="@../cardImages/J_skip.png" />
+                        <Image url="@../cardImages/sk_j.png" />
                     </image>
                 </ImageView>
                 <ImageView fx:id="drawPile" fitHeight="148.0" fitWidth="67.0" pickOnBounds="true" preserveRatio="true" onMouseClicked="#addNewCard">
                     <image>
-                        <Image url="@../cardImages/W_BACK.png" />
+                        <Image url="@../cardImages/b_w.png" />
                     </image>
                 </ImageView>
             </children>
@@ -64,17 +64,17 @@
             <children>
                 <ImageView fitHeight="77.0" fitWidth="56.0" pickOnBounds="true" preserveRatio="true">
                     <image>
-                        <Image url="@../cardImages/W_BACK.png" />
+                        <Image url="@../cardImages/b_w.png" />
                     </image>
                 </ImageView>
                 <ImageView fitHeight="77.0" fitWidth="56.0" pickOnBounds="true" preserveRatio="true">
                     <image>
-                        <Image url="@../cardImages/W_BACK.png" />
+                        <Image url="@../cardImages/b_w.png" />
                     </image>
                 </ImageView>
                 <ImageView fitHeight="77.0" fitWidth="56.0" pickOnBounds="true" preserveRatio="true">
                     <image>
-                        <Image url="@../cardImages/W_BACK.png" />
+                        <Image url="@../cardImages/b_w.png" />
                     </image>
                 </ImageView>
             </children>
@@ -83,17 +83,17 @@
             <children>
                 <ImageView fitHeight="77.0" fitWidth="56.0" pickOnBounds="true" preserveRatio="true">
                     <image>
-                        <Image url="@../cardImages/W_BACK.png" />
+                        <Image url="@../cardImages/b_w.png" />
                     </image>
                 </ImageView>
                 <ImageView fitHeight="77.0" fitWidth="56.0" pickOnBounds="true" preserveRatio="true">
                     <image>
-                        <Image url="@../cardImages/W_BACK.png" />
+                        <Image url="@../cardImages/b_w.png" />
                     </image>
                 </ImageView>
                 <ImageView fitHeight="77.0" fitWidth="56.0" pickOnBounds="true" preserveRatio="true">
                     <image>
-                        <Image url="@../cardImages/W_BACK.png" />
+                        <Image url="@../cardImages/b_w.png" />
                     </image>
                 </ImageView>
             </children>
