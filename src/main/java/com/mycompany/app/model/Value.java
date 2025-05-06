@@ -17,4 +17,5 @@ public enum Value {
 
     Value(Color color) {
     }
+
 }
