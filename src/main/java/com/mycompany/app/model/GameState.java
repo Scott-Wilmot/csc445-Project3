@@ -41,20 +41,29 @@ public class GameState implements Serializable {
 
     /**
      * Creating a deck of all the possible cards.
-     * A deck is composed of 10 values and 8 shapes.
-     * 10 shapes × 8 values = 80 unique cards * 2 = 160 total cards
+     * 10 shapes × 7 values = 70 cards (normal)
+     * Power Card = 4 x (+4 power cards) and one Wild Card
      * </p>
      *
      * @modifies deck so that it contains 180 cards in random order
      */
     private void initializeDeck() {
         ArrayList<Card> cards = new ArrayList<>();
+
         for (Shape shape : Shape.values()) {
+            if (shape == Shape.DRAW_FOUR || shape == Shape.WILD) continue;
             for (Value value : Value.values()) {
-                cards.add(new Card(shape, value));
+                if (value == Value.W) continue;
                 cards.add(new Card(shape, value));
             }
         }
+        // Adding power cards
+        for (int i = 0; i < 4; i++) {
+            cards.add(new Card(Shape.DRAW_FOUR, Value.W));
+        }
+        cards.add(new Card(Shape.WILD, Value.W));
+
+        System.out.println(cards.size());
         Collections.shuffle(cards);
         deck = new ArrayDeque<>(cards);
     }
@@ -62,7 +71,7 @@ public class GameState implements Serializable {
     /**
      * Increment player count to account for a newly joined player. If max player count is already reached (4 players) return an exception
      */
-    private boolean addPlayer(int playerId, Player player) {
+    public boolean addPlayer(int playerId, Player player) {
         if (playerCount < MAX_PLAYERS) {
             if (players.containsKey(playerId)) {
                 System.err.println("Duplicate Player Detected.");
