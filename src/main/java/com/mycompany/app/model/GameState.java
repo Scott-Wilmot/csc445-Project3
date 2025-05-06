@@ -340,7 +340,7 @@ public class GameState implements Serializable {
     }
 
     public static void main(String[] args) throws UnknownHostException {
-        GameState game = new GameState();
+        GameState game = new GameState(4);
         System.out.println(game.getDeck().size());
 
         InetAddress inetAddress = InetAddress.getByName("localhost");
