@@ -1,5 +1,6 @@
 package com.mycompany.app.ui.uiController;
 
+import com.mycompany.app.model.GameState;
 import com.mycompany.app.ui.utils.CustomUtils;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -26,6 +27,13 @@ public class RoomViewController {
     ImageView drawPile;
     @FXML
     ImageView discardPile;
+
+    GameState gameState;
+
+    public RoomViewController() {
+        this.gameState = new GameState();
+        System.out.println(gameState.getDeck().size());
+    }
 
     /**
      * Adds a new card to the user card group and initializes its interaction behavior.
@@ -86,17 +94,6 @@ public class RoomViewController {
 
     /**
      * Aligns the cards in the userCardsGroup evenly along the horizontal axis.
-     *
-     * This method calculates an appropriate distance to position each card in the
-     * userCardsGroup based on the total number of cards. It iterates through all
-     * the cards and sets their horizontal layout positions to ensure equal
-     * spacing, providing a visually balanced arrangement of cards.
-     *
-     * The spacing is calculated dynamically to adjust for changes in the number
-     * of cards, maintaining an even layout as cards are added or removed.
-     *
-     * This method is typically invoked after adding or removing cards
-     * to maintain the consistency of the user interface.
      */
     private void organizeUserCards() {
         double layoutDistance = 300.0 / userCardsGroup.getChildren().size() + 1;
