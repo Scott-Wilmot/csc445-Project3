@@ -49,12 +49,21 @@ public class GameState implements Serializable {
      */
     private void initializeDeck() {
         ArrayList<Card> cards = new ArrayList<>();
+
         for (Shape shape : Shape.values()) {
+            if (shape == Shape.DRAW_FOUR || shape == Shape.WILD) continue;
             for (Value value : Value.values()) {
-                cards.add(new Card(shape, value));
+                if (value == Value.W) continue;
                 cards.add(new Card(shape, value));
             }
         }
+        // Adding power cards
+        for (int i = 0; i < 4; i++) {
+            cards.add(new Card(Shape.DRAW_FOUR, Value.W));
+        }
+        cards.add(new Card(Shape.WILD, Value.W));
+
+        System.out.println(cards.size());
         Collections.shuffle(cards);
         deck = new ArrayDeque<>(cards);
     }
@@ -340,7 +349,7 @@ public class GameState implements Serializable {
     }
 
     public static void main(String[] args) throws UnknownHostException {
-        GameState game = new GameState(4);
+        GameState game = new GameState();
         System.out.println(game.getDeck().size());
 
         InetAddress inetAddress = InetAddress.getByName("localhost");
