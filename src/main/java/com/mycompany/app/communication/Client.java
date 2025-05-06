@@ -11,7 +11,7 @@ public class Client {
 
     public static void main(String[] args) throws IOException {
         Client c = new Client();
-        c.connect("127.0.0.1", 8080);
+        c.connect("129.3.125.8", 57278);
     }
 
     Client() throws SocketException {
@@ -26,7 +26,7 @@ public class Client {
      * @throws SocketException
      */
     public void connect(String ip, int port) throws IOException {
-        byte[] buf = "let_me_in_please".getBytes();
+        byte[] buf = "".getBytes();
         DatagramPacket packet = new DatagramPacket(buf, buf.length, InetAddress.getByName(ip), port);
 
         client_socket.send(packet);

@@ -22,12 +22,13 @@ public class GameState implements Serializable {
     private Map<Integer, Player> players;
 
     private static final int NUM_CARDS_DEALT = 7;
+    private static final int MAX_PLAYERS = 4;
 
     /**
      *
      */
-    public GameState(int playerCount) {
-        this.playerCount = playerCount;
+    public GameState() {
+        this.playerCount = 0;
         currentTurn = 0;
         cardStackCounter = 0;
         stackActive = false;
@@ -62,7 +63,7 @@ public class GameState implements Serializable {
      * Increment player count to account for a newly joined player. If max player count is already reached (4 players) return an exception
      */
     private boolean addPlayer(int playerId, Player player) {
-        if (playerCount < 4) {
+        if (playerCount < MAX_PLAYERS) {
             if (players.containsKey(playerId)) {
                 System.err.println("Duplicate Player Detected.");
                 return false;
@@ -205,17 +206,19 @@ public class GameState implements Serializable {
     // Reverse: 1/2 complete
     // +2: TODO
     public void placeCard(Card card) {
-
         // fail conditions:
         // 1. Not valid card
+        // but if it's a wild card, not a fail condition
         // 2. Not your turn
         if (card.shape() != discardPile.peekLast().shape() && card.value() != discardPile.peekLast().value()) {
+            if (card.shape() == Shape.WILD) {
+                discardPile.addLast(card);
+                players.get(currentTurn).removeCard(card);
+                return;
+            }
             System.out.println("Not a valid card");
             return;
         }
-//        if (currentTurn != player.getID()) {
-//            return;
-//        }
 
         // pass conditions
         if (card.shape() == discardPile.peekLast().shape()
@@ -238,6 +241,11 @@ public class GameState implements Serializable {
                 skipActive = true;
 
             }
+        }
+
+        // win condition
+        if (players.get(currentTurn).getPlayerHand().isEmpty()) {
+
         }
 
         // end turn
@@ -293,11 +301,10 @@ public class GameState implements Serializable {
 
         // 1: pick up cards
         if (stackActive) {
-            // how will i handle stacking?
-            // a player can choose to not stack and pick up 2
-            // or a player can choose to stack +2 and send it to the next person
-            // or a player isn't able to stack, so must pick up 2 cards
-            // for now, i'm disabling stacking on stacking until the game is complete
+            // ask the user if they want to place a +2 if they have it in thier hand
+            // if they say yes, place it and end turn
+            // if not, pick up cards and end turn.
+//            if (players.get(currentTurn).getPlayerHand().contains()) {}
             drawCard(cardStackCounter);
             stackActive = false;
 
@@ -337,49 +344,51 @@ public class GameState implements Serializable {
         System.out.println(game.getDeck().size());
 
         InetAddress inetAddress = InetAddress.getByName("localhost");
-//        Player player = new Player(inetAddress);
-//        Player player2 = new Player(inetAddress);
-//        Player player3 = new Player(inetAddress);
-//        Player player4 = new Player(inetAddress);
+        Player player = new Player(inetAddress,8082);
+        Player player2 = new Player(inetAddress,8082);
+        Player player3 = new Player(inetAddress,8082);
+        Player player4 = new Player(inetAddress,8082);
 
-//        game.addPlayer(0, player);
-//        game.addPlayer(1, player2);
-//        game.addPlayer(2, player3);
-//        game.addPlayer(3, player4);
-//
-//
-//
-//        game.startGame();
-//        System.out.println(player.getPlayerHand());
-//        System.out.println(player2.getPlayerHand());
-//        System.out.println(player3.getPlayerHand());
-//        System.out.println(player4.getPlayerHand());
-//        System.out.println("Discard Pile " + game.getDiscardPile());
-//
-//        Scanner scanner = new Scanner(System.in);
-//        System.out.println("Game Started: " + game.getCurrentTurn());
-//        String input = "";
-//        while (!input.equals("quit")) {
-//            System.out.println("PLayer " + game.getCurrentTurn() + "'s turn");
-//            input = scanner.nextLine();
-//            if (input.equals("draw")) {
-//                game.drawCard(1);
-//                System.out.println();
-//            }
-//
-//            if (input.equals("place")) {
-//                int index = Integer.parseInt(scanner.nextLine());
-//                game.placeCard(game.getActivePlayerCard(index));
-//            }
-//
-//            if (input.equals("debug")) {
-//                System.out.println(player.getPlayerHand());
-//                System.out.println(player2.getPlayerHand());
-//                System.out.println(player3.getPlayerHand());
-//                System.out.println(player4.getPlayerHand());
-//                System.out.println("Discard Pile " + game.getDiscardPile());
-//            }
-//        }
-        // Bug Founds: End turn button needed if the card you drew isn't valid either
+        game.addPlayer(0, player);
+        game.addPlayer(1, player2);
+        game.addPlayer(2, player3);
+        game.addPlayer(3, player4);
+
+
+        game.startGame();
+        System.out.println(player.getPlayerHand());
+        System.out.println(player2.getPlayerHand());
+        System.out.println(player3.getPlayerHand());
+        System.out.println(player4.getPlayerHand());
+        System.out.println("Discard Pile " + game.getDiscardPile());
+
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Game Started: " + game.getCurrentTurn());
+        String input = "";
+        while (!input.equals("quit")) {
+            System.out.println("PLayer " + game.getCurrentTurn() + "'s turn");
+            input = scanner.nextLine();
+            if (input.equals("draw")) {
+                game.drawCard(1);
+                System.out.println();
+            }
+
+            if (input.equals("place")) {
+                int index = Integer.parseInt(scanner.nextLine());
+                game.placeCard(game.getActivePlayerCard(index));
+            }
+
+            if (input.equals("skip")) {
+                game.endTurn();
+            }
+
+            if (input.equals("debug")) {
+                System.out.println(player.getPlayerHand());
+                System.out.println(player2.getPlayerHand());
+                System.out.println(player3.getPlayerHand());
+                System.out.println(player4.getPlayerHand());
+                System.out.println("Discard Pile " + game.getDiscardPile());
+            }
+        }
     }
 }

@@ -1,6 +1,16 @@
 package com.mycompany.app.model;
 
+/**
+ * OPCODES:
+ * <ol>
+ *     <li>1: Join</li>
+ *     <li></li>
+ * </ol>
+ */
 public class Packet {
+    enum opcodes {
+        JOIN,
+    }
 
     static void createAckPacket() {
 
@@ -8,10 +18,18 @@ public class Packet {
 
     /**
      * The action chosen by the User.
-     *
-     *
      */
-    static void createActionPacket() {
+    static void createActionPacket(int action) {
+
+    }
+
+    /**
+     * The packet used to join the session.
+     * OPCODE + INET-ADDRESS + (ENCRYPTION SCHEME)
+     */
+    static void syncPacket() {
+        byte[] packet = new byte[4];
+
 
     }
 }
