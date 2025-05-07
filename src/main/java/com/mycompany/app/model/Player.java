@@ -11,6 +11,7 @@ public class Player {
     int port;
 
     boolean cardDrawn;
+    boolean cardPlayed;
 
     public Player(InetAddress playerAddress, int port) {
         playerHand = new ArrayList<>();
@@ -49,6 +50,14 @@ public class Player {
 
     public void hasDrawnCard(boolean drawn) {
         cardDrawn = drawn;
+    }
+
+    public boolean hasPlayedCard() {
+        return cardPlayed;
+    }
+
+    public void hasPlayedCard(boolean cardPlayed) {
+        this.cardPlayed = cardPlayed;
     }
 
     // used to determine if the player can stack the +2s/+4s/

@@ -63,7 +63,6 @@ public class GameState implements Serializable {
         }
         cards.add(new Card(Shape.WILD, Value.W));
 
-        System.out.println(cards.size());
         Collections.shuffle(cards);
         deck = new ArrayDeque<>(cards);
     }
@@ -237,6 +236,7 @@ public class GameState implements Serializable {
                 || card.value() == Value.W) {
             discardPile.addLast(card);
             players.get(currentTurn).removeCard(card);
+            players.get(currentTurn).hasPlayedCard(true);
 
             // maybe take care of special conditions after the initial card is added
             if (card.shape() == Shape.DRAW_TWO) {
@@ -311,7 +311,7 @@ public class GameState implements Serializable {
             nextTurn();
             initializeTurn();
         }
-        if (players.get(currentTurn).hasDrawnCard()) {
+        if (players.get(currentTurn).hasDrawnCard() || players.get(currentTurn).hasPlayedCard()) {
             nextTurn();
             initializeTurn();
         }
@@ -322,13 +322,16 @@ public class GameState implements Serializable {
      */
     // TODO: add +2 stacking. currently, you can't stack.
     public void initializeTurn() {
-
         // 1: pick up cards
         if (stackActive) {
             // ask the user if they want to place a +2 if they have it in thier hand
             // if they say yes, place it and end turn
             // if not, pick up cards and end turn.
-//            if (players.get(currentTurn).getPlayerHand().contains()) {}
+            if (players.get(currentTurn).hasDrawCard(discardPile.peekLast())) {
+                // give the player a choice to stack card
+                // give the player a choice to not stack card
+                // end turn;
+            }
             drawCard(cardStackCounter);
             stackActive = false;
 
@@ -337,6 +340,9 @@ public class GameState implements Serializable {
             // 2: skip cards
             endTurn();
         }
+        // resetting parameters
+        players.get(currentTurn).hasDrawnCard(false);
+        players.get(currentTurn).hasPlayedCard(false);
     }
 
     private void resetGame() {
