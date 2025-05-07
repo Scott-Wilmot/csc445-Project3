@@ -38,7 +38,7 @@ public class RoomViewController {
     GameState gameState;
 
     @FXML
-    public void initialize() throws UnknownHostException {
+    public void initialize() throws Exception {
         GameState game = new GameState();
         System.out.println(game.getDeck().size());
 
@@ -56,28 +56,40 @@ public class RoomViewController {
 
         game.startGame();
         this.gameState = game;
-        displayCurrentUserCards();
+        updateDisplayInterface();
     }
 
     /**
      * Changing a different user cards since the player is changing
      */
-    private void displayCurrentUserCards() {
+    private void updateDisplayInterface() throws Exception {
+
+        // Current user cards
         if (userCardsGroup == null) this.userCardsGroup = new Group();
-
         userCardsGroup.getChildren().clear();
-        System.out.println("Clearing user cards");
-
         for (Card card : gameState.getCurrentPlayer().getPlayerHand()) {
             addNewCard(card.getFileName());
-            System.out.println("adding card " + card.getFileName());
         }
-        System.out.println("done");
+
+        // DiscardPile
+        Card lastDiscardCard = gameState.getDiscardPile().peekLast();
+
+        if (lastDiscardCard != null) {
+            Image discardPileImage = new Image("cardImages/" + lastDiscardCard.getFileName());
+            System.out.println(discardPileImage.getUrl());
+            discardPile.setImage(discardPileImage);
+        } else {
+            throw new Exception("The discard Pile is empty");
+        }
+
+
     }
 
     @FXML
-    private void handleDrawCard(MouseEvent event) {
+    private void handleDrawCard(MouseEvent event) throws Exception {
+        System.out.println("Executed");
         gameState.drawCard(1);
+        updateDisplayInterface();
     }
 
     /**
@@ -105,12 +117,11 @@ public class RoomViewController {
                 try {
                     int index = getCardIndex(cardImageLocation);
                     gameState.placeCard(gameState.getActivePlayerCard(index));
-                    discardCard(event, imageView);
+                    updateDisplayInterface();
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
-                // For changing View
-                displayCurrentUserCards();
+
             });
             imageView.setOnMouseEntered(event -> {
                 imageView.setLayoutY(-20);
