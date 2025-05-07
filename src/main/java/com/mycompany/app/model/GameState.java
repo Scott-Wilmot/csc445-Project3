@@ -308,6 +308,7 @@ public class GameState implements Serializable {
     void endTurn() {
         if (skipActive) {
             skipActive = false;
+            stackActive = false;
             nextTurn();
             initializeTurn();
         }
@@ -315,6 +316,7 @@ public class GameState implements Serializable {
             nextTurn();
             initializeTurn();
         }
+        System.out.println("Player has not drawn card. Cannot end turn.");
     }
 
     /**
@@ -328,12 +330,12 @@ public class GameState implements Serializable {
             // if they say yes, place it and end turn
             // if not, pick up cards and end turn.
             if (players.get(currentTurn).hasDrawCard(discardPile.peekLast())) {
+                System.out.println("has valid card");
                 // give the player a choice to stack card
                 // give the player a choice to not stack card
                 // end turn;
             }
             drawCard(cardStackCounter);
-            stackActive = false;
 
             endTurn();
         } else if (skipActive) {
