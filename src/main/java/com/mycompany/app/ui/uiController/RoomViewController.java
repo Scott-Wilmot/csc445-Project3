@@ -1,6 +1,8 @@
 package com.mycompany.app.ui.uiController;
 
+import com.mycompany.app.model.Card;
 import com.mycompany.app.model.GameState;
+import com.mycompany.app.model.Player;
 import com.mycompany.app.ui.utils.CustomUtils;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -13,6 +15,11 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.text.Text;
+
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.List;
+import java.util.Map;
 
 
 public class RoomViewController {
@@ -30,34 +37,77 @@ public class RoomViewController {
 
     GameState gameState;
 
-    public RoomViewController() {
-        this.gameState = new GameState();
-        System.out.println(gameState.getDeck().size());
+    @FXML
+    public void initialize() throws UnknownHostException {
+        GameState game = new GameState();
+        System.out.println(game.getDeck().size());
+
+        InetAddress inetAddress = InetAddress.getByName("localhost");
+        Player player = new Player(inetAddress, 8082);
+        Player player2 = new Player(inetAddress, 8082);
+        Player player3 = new Player(inetAddress, 8082);
+        Player player4 = new Player(inetAddress, 8082);
+
+        game.addPlayer(0, player);
+        game.addPlayer(1, player2);
+        game.addPlayer(2, player3);
+        game.addPlayer(3, player4);
+
+
+        game.startGame();
+        this.gameState = game;
+        displayCurrentUserCards();
+    }
+
+    /**
+     * Changing a different user cards since the player is changing
+     */
+    private void displayCurrentUserCards() {
+        if (userCardsGroup == null) this.userCardsGroup = new Group();
+
+        userCardsGroup.getChildren().clear();
+
+        for (Card card : gameState.getCurrentPlayer().getPlayerHand()) {
+            addNewCard(card.getFileName());
+        }
+    }
+
+    @FXML
+    private void handleDrawCard(MouseEvent event) {
+        gameState.drawCard(1);
     }
 
     /**
      * Adds a new card to the user card group and initializes its interaction behavior.
-     *
+     * <p>
      * This method generates a random card image, creates a new {@code ImageView} for
      * displaying the card, and configures its behavior for interactions such as mouse
      * clicks and hover effects. When the card is clicked, it triggers the discard action.
      * Mouse hover actions move the card vertically for visual feedback.
-     *
+     * <p>
      * The card is added to the {@code userCardsGroup}, and the layout of the user's cards
      * is reorganized after adding the new card.
-     *
+     * <p>
      * The method catches and logs any exceptions that occur during the process.
      */
-    @FXML
-    private void addNewCard() {
+    private void addNewCard(String cardImageLocation) {
         try {
             ImageView imageView = new ImageView();
-            Image image = new Image(CustomUtils.generateRandomCard());
+            Image image = new Image("cardImages/" + cardImageLocation);
+
             imageView.setImage(image);
             imageView.setFitWidth(67);
             imageView.setFitHeight(117);
             imageView.setOnMouseClicked(event -> {
-                discardCard(event, imageView);
+                try {
+                    discardCard(event, imageView);
+                    int index = getCardIndex("cardImages/" + cardImageLocation);
+                    gameState.placeCard(gameState.getActivePlayerCard(index));
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                // For changing View
+                displayCurrentUserCards();
             });
             imageView.setOnMouseEntered(event -> {
                 imageView.setLayoutY(-20);
@@ -66,8 +116,12 @@ public class RoomViewController {
                 imageView.setLayoutY(0);
             });
             imageView.setPreserveRatio(true);
-
             userCardsGroup.getChildren().add(imageView);
+            System.out.println(image.getUrl());
+            System.out.println(image.getHeight() + ", " + image.getWidth());
+            System.out.println(imageView.getImage().getWidth() + ", " + imageView.getImage().getHeight() + ", " + imageView.getFitWidth() + ", " + imageView.getFitHeight());
+            System.out.println(userCardsGroup.getChildren().size());
+
             organizeUserCards();
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -77,13 +131,13 @@ public class RoomViewController {
 
     /**
      * Discards a card from the user's hand and updates the discard pile.
-     *
+     * <p>
      * This method sets the image of the discard pile to the image of the card
      * being discarded and removes the card from the user's hand. After the card
      * is removed, the method reorganizes the layout of the remaining cards in
      * the user's hand.
      *
-     * @param event the mouse event triggered when the card is clicked
+     * @param event     the mouse event triggered when the card is clicked
      * @param imageView the ImageView representing the card to be discarded
      */
     private void discardCard(MouseEvent event, ImageView imageView) {
@@ -102,6 +156,18 @@ public class RoomViewController {
             node.setLayoutX(currentlayOutDistance);
             currentlayOutDistance += layoutDistance;
         }
+    }
+
+    public int getCardIndex(String cardImageLocation) throws Exception {
+        String temp = cardImageLocation.split("\\.")[0];
+        String[] li = temp.split("_");
+        for (int i = 0; i < gameState.getCurrentPlayer().getPlayerHand().size(); i++) {
+            Card card = gameState.getCurrentPlayer().getPlayerHand().get(i);
+            if (li[0].equals(card.value().toString()) && li[1].equals(card.value().toString())) {
+                return i;
+            }
+        }
+        throw new Exception("Card not found");
     }
 
     public void setRoomCode(String roomCodeId) {

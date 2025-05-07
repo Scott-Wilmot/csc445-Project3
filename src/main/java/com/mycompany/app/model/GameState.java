@@ -100,7 +100,7 @@ public class GameState implements Serializable {
      * Initializes the game state.
      * In other words, deals the deck {@link #dealDeck()}, adds a non-wild card to the discard pile.
      */
-    private void startGame() {
+    public void startGame() {
         dealDeck();
         // TODO: error handling: what if the first card is a +2
         // todo: complete placing first before moving forward with this
@@ -127,6 +127,10 @@ public class GameState implements Serializable {
 
     public int getCurrentTurn() {
         return currentTurn;
+    }
+
+    public Player getCurrentPlayer() {
+        return players.get(currentTurn);
     }
 
     /**
@@ -207,7 +211,7 @@ public class GameState implements Serializable {
      * &#9; If the card pulled from the deck is a valid card, they may place the card down and end their turn.
      * &#9; If the card pulled from the deck is not a valid card, they must keep the card in their hand and end their turn.
      *
-     * @param card   - the card that they are placing down
+     * @param card - the card that they are placing down
      */
 
     // LOGIC:
@@ -284,15 +288,16 @@ public class GameState implements Serializable {
     /**
      * The game retrieves the active player's card.
      * Used to access any methods that require a player card.
+     *
      * @param index - the card that the player chooses from their hand
      */
-    Card getActivePlayerCard(int index) {
+    public Card getActivePlayerCard(int index) {
         return players.get(currentTurn).getCard(index);
     }
 
     /**
-     * Ends the active player's turn and passes it on to the next player. 
-     * Can be used by player to end their turn. 
+     * Ends the active player's turn and passes it on to the next player.
+     * Can be used by player to end their turn.
      * Accessed by methods after player action such as {@link #placeCard(Card)}.
      */
     void endTurn() {
@@ -353,10 +358,10 @@ public class GameState implements Serializable {
         System.out.println(game.getDeck().size());
 
         InetAddress inetAddress = InetAddress.getByName("localhost");
-        Player player = new Player(inetAddress,8082);
-        Player player2 = new Player(inetAddress,8082);
-        Player player3 = new Player(inetAddress,8082);
-        Player player4 = new Player(inetAddress,8082);
+        Player player = new Player(inetAddress, 8082);
+        Player player2 = new Player(inetAddress, 8082);
+        Player player3 = new Player(inetAddress, 8082);
+        Player player4 = new Player(inetAddress, 8082);
 
         game.addPlayer(0, player);
         game.addPlayer(1, player2);
@@ -376,6 +381,7 @@ public class GameState implements Serializable {
         String input = "";
         while (!input.equals("quit")) {
             System.out.println("PLayer " + game.getCurrentTurn() + "'s turn");
+            System.out.println("ID: " + game.getCurrentPlayer().id);
             input = scanner.nextLine();
             if (input.equals("draw")) {
                 game.drawCard(1);
