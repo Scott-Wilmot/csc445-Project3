@@ -272,12 +272,10 @@ public class GameState implements Serializable {
      * @modifies {@link Player}'s hand by adding drawAmount card
      */
     public void drawCard(int drawAmount) {
-        // Cannot draw card more than once
-        if (players.get(currentTurn).hasDrawnCard()) return;
 
         if (drawAmount == 1) {
             players.get(currentTurn).addCard(deck.removeFirst());
-            players.get(currentTurn).hasDrawnCard(true);
+            endTurn();
             return;
         }
         for (int i = 0; i < drawAmount; i++) {
@@ -310,8 +308,6 @@ public class GameState implements Serializable {
      */
     // TODO: add +2 stacking. currently, you can't stack.
     public void initializeTurn() {
-        // allow the player to draw card in their new turn
-        players.get(currentTurn).hasDrawnCard(false);
 
         // 1: pick up cards
         if (stackActive) {
