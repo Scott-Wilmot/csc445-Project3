@@ -34,6 +34,8 @@ public class RoomViewController {
     ImageView drawPile;
     @FXML
     ImageView discardPile;
+    @FXML
+    Text currentPlayerId;
 
     GameState gameState;
 
@@ -64,6 +66,9 @@ public class RoomViewController {
      */
     private void updateDisplayInterface() throws Exception {
 
+        // Display current User ID
+        currentPlayerId.setText(String.valueOf(gameState.getCurrentTurn()));
+
         // Current user cards
         if (userCardsGroup == null) this.userCardsGroup = new Group();
         userCardsGroup.getChildren().clear();
@@ -76,10 +81,17 @@ public class RoomViewController {
 
         if (lastDiscardCard != null) {
             Image discardPileImage = new Image("cardImages/" + lastDiscardCard.getFileName());
-            System.out.println(discardPileImage.getUrl());
+
             discardPile.setImage(discardPileImage);
         } else {
             throw new Exception("The discard Pile is empty");
+        }
+
+
+        //For Debugging
+        for (Map.Entry<Integer, Player> entry : gameState.getPlayers().entrySet()) {
+            Player player = gameState.getPlayers().get(entry.getKey());
+            System.out.println("Key: " + entry.getKey() + ", Value: " + player.getPlayerHand());
         }
 
 
@@ -87,7 +99,7 @@ public class RoomViewController {
 
     @FXML
     private void handleDrawCard(MouseEvent event) throws Exception {
-        System.out.println("Executed");
+
         gameState.drawCard(1);
         updateDisplayInterface();
     }
@@ -171,10 +183,8 @@ public class RoomViewController {
     public int getCardIndex(String cardImageLocation) throws Exception {
         String temp = cardImageLocation.split("\\.")[0];
         String[] li = temp.split("_");
-        System.out.println(cardImageLocation);
         for (int i = 0; i < gameState.getCurrentPlayer().getPlayerHand().size(); i++) {
             Card card = gameState.getCurrentPlayer().getPlayerHand().get(i);
-            System.out.println(cardImageLocation + ": " + card.getFileName());
             if (cardImageLocation.equals(card.getFileName())) {
                 return i;
             }

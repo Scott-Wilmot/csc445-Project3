@@ -223,20 +223,20 @@ public class GameState implements Serializable {
         // 1. Not valid card
         // but if it's a wild card, not a fail condition
         // 2. Not your turn
+        System.out.println(card.value() + ", " + card.shape());
         if (card.shape() != discardPile.peekLast().shape() && card.value() != discardPile.peekLast().value()) {
-            if (card.shape() == Shape.WILD) {
-                discardPile.addLast(card);
-                players.get(currentTurn).removeCard(card);
+            if (card.value() != Value.W && card.shape() != Shape.WILD) {
+                System.out.println("Not a valid card");
                 return;
             }
-            System.out.println("Not a valid card");
-            return;
+
         }
 
         // pass conditions
         if (card.shape() == discardPile.peekLast().shape()
                 || card.value() == discardPile.peekLast().value()
-                || card.shape() == Shape.WILD) {
+                || card.shape() == Shape.WILD
+                || card.value() == Value.W) {
             discardPile.addLast(card);
             players.get(currentTurn).removeCard(card);
 
@@ -244,6 +244,9 @@ public class GameState implements Serializable {
             if (card.shape() == Shape.DRAW_TWO) {
                 // add logic for +2
                 cardStackCounter += 2;
+                stackActive = true;
+            } else if (card.shape() == Shape.DRAW_FOUR) {
+                cardStackCounter += 4;
                 stackActive = true;
             } else if (card.shape() == Shape.REVERSE) {
                 turnOrderReversed = !turnOrderReversed;
