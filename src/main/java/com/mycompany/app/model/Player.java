@@ -55,12 +55,4 @@ public class Player {
         return port;
     }
 
-    // is this bad practice? setting the same name for setter and getter?
-    public boolean hasDrawnCard() {
-        return cardDrawn;
-    }
-
-    public void hasDrawnCard(boolean cardDrawn) {
-        this.cardDrawn = cardDrawn;
-    }
 }

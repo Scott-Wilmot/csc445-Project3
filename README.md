@@ -24,6 +24,9 @@ csc445-Project3/
 ```
 
 ## Running User Interface for JavaFX
+Before running, please create a folder named "cardImages" under "src/main/resources"
+
+Copy all images from deck-renamed and put into the "cardImages" folder
 ```java
 ./mvnw javafx:run
 ```

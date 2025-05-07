@@ -19,6 +19,10 @@ public enum Value {
         this.value = value;
     }
 
+    public String getValue() {
+        return value;
+    }
+
     public static Value fromString(String input) {
         for (Value v : Value.values()) {
             if (v.value.equals(input)) {
