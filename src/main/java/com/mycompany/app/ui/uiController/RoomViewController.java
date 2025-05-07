@@ -66,10 +66,13 @@ public class RoomViewController {
         if (userCardsGroup == null) this.userCardsGroup = new Group();
 
         userCardsGroup.getChildren().clear();
+        System.out.println("Clearing user cards");
 
         for (Card card : gameState.getCurrentPlayer().getPlayerHand()) {
             addNewCard(card.getFileName());
+            System.out.println("adding card " + card.getFileName());
         }
+        System.out.println("done");
     }
 
     @FXML
@@ -100,9 +103,9 @@ public class RoomViewController {
             imageView.setFitHeight(117);
             imageView.setOnMouseClicked(event -> {
                 try {
-                    discardCard(event, imageView);
-                    int index = getCardIndex("cardImages/" + cardImageLocation);
+                    int index = getCardIndex(cardImageLocation);
                     gameState.placeCard(gameState.getActivePlayerCard(index));
+                    discardCard(event, imageView);
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
@@ -117,10 +120,6 @@ public class RoomViewController {
             });
             imageView.setPreserveRatio(true);
             userCardsGroup.getChildren().add(imageView);
-            System.out.println(image.getUrl());
-            System.out.println(image.getHeight() + ", " + image.getWidth());
-            System.out.println(imageView.getImage().getWidth() + ", " + imageView.getImage().getHeight() + ", " + imageView.getFitWidth() + ", " + imageView.getFitHeight());
-            System.out.println(userCardsGroup.getChildren().size());
 
             organizeUserCards();
         } catch (Exception e) {
@@ -161,9 +160,11 @@ public class RoomViewController {
     public int getCardIndex(String cardImageLocation) throws Exception {
         String temp = cardImageLocation.split("\\.")[0];
         String[] li = temp.split("_");
+        System.out.println(cardImageLocation);
         for (int i = 0; i < gameState.getCurrentPlayer().getPlayerHand().size(); i++) {
             Card card = gameState.getCurrentPlayer().getPlayerHand().get(i);
-            if (li[0].equals(card.value().toString()) && li[1].equals(card.value().toString())) {
+            System.out.println(cardImageLocation + ": " + card.getFileName());
+            if (cardImageLocation.equals(card.getFileName())) {
                 return i;
             }
         }
