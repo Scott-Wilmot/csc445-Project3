@@ -43,6 +43,36 @@ public class Player {
         return playerHand.get(index);
     }
 
+    public boolean hasDrawnCard() {
+        return cardDrawn;
+    }
+
+    public void hasDrawnCard(boolean drawn) {
+        cardDrawn = drawn;
+    }
+
+    // used to determine if the player can stack the +2s/+4s/
+    public boolean hasDrawCard(Card playedCard) {
+        if (playedCard.shape() == Shape.DRAW_FOUR) {
+            for (Card card : playerHand) {
+                if (card.shape() == Shape.DRAW_FOUR) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        if (playedCard.shape() == Shape.DRAW_TWO) {
+            for (Card card : playerHand) {
+                if (card.shape() == Shape.DRAW_TWO) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        return false;
+    }
+
     public int getID() {
         return id;
     }
