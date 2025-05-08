@@ -1,10 +1,11 @@
 package com.mycompany.app.model;
 
+import java.io.Serializable;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Player {
+public class Player implements Serializable {
     int id;
     List<Card> playerHand;
     InetAddress playerAddress;
