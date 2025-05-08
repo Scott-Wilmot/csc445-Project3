@@ -1,10 +1,11 @@
 package com.mycompany.app.model;
 
+import java.io.Serializable;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Player {
+public class Player implements Serializable {
     int id;
     List<Card> playerHand;
     InetAddress playerAddress;
@@ -55,12 +56,4 @@ public class Player {
         return port;
     }
 
-    // is this bad practice? setting the same name for setter and getter?
-    public boolean hasDrawnCard() {
-        return cardDrawn;
-    }
-
-    public void hasDrawnCard(boolean cardDrawn) {
-        this.cardDrawn = cardDrawn;
-    }
 }

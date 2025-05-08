@@ -52,7 +52,7 @@
                         <Image url="@../cardImages/sk_j.png" />
                     </image>
                 </ImageView>
-                <ImageView fx:id="drawPile" fitHeight="148.0" fitWidth="67.0" pickOnBounds="true" preserveRatio="true" onMouseClicked="#addNewCard">
+                <ImageView fx:id="drawPile" fitHeight="148.0" fitWidth="67.0" onMouseClicked="#handleDrawCard" pickOnBounds="true" preserveRatio="true">
                     <image>
                         <Image url="@../cardImages/b_w.png" />
                     </image>
@@ -98,5 +98,11 @@
                 </ImageView>
             </children>
         </HBox>
+      <HBox alignment="CENTER" layoutX="10.0" layoutY="10.0" prefHeight="22.0" prefWidth="141.0" spacing="10.0">
+         <children>
+            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="CurrentPlayerID:" />
+            <Text fx:id="currentPlayerId" strokeType="OUTSIDE" strokeWidth="0.0" text="&lt;Some ID&gt;" />
+         </children>
+      </HBox>
     </children>
 </AnchorPane>
