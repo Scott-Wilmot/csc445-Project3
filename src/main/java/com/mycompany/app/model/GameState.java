@@ -63,6 +63,7 @@ public class GameState implements Serializable {
         }
         cards.add(new Card(Shape.WILD, Value.W));
 
+        System.out.println(cards);
         Collections.shuffle(cards);
         deck = new ArrayDeque<>(cards);
     }
@@ -228,11 +229,9 @@ public class GameState implements Serializable {
 //                return;
 //            }
 //        }
-        if (card.shape() != discardPile.peekLast().shape() && card.value() != discardPile.peekLast().value()) {
-            if (card.shape() != Shape.WILD) {
-                System.out.println("Not a valid card");
-                return;
-            }
+        if (card.shape() != discardPile.peekLast().shape() && card.value() != discardPile.peekLast().value()
+                && card.value() != Value.W) {
+            System.out.println("Not a valid card");;
             return;
         }
 
