@@ -15,7 +15,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Set;
 
-public class Host extends Booger {
+public class Host {
 
     DatagramChannel host_channel;
     GameState gameState;

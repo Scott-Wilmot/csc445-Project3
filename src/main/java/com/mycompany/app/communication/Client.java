@@ -8,7 +8,7 @@ import java.net.*;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 
-public class Client extends Booger {
+public class Client {
 
     DatagramSocket client_socket;
     GameState gameState;
@@ -16,7 +16,7 @@ public class Client extends Booger {
 
     public static void main(String[] args) throws IOException {
         Client c = new Client();
-        c.connect("129.3.125.8", 57278);
+        c.connect("129.3.123.136", 56836);
     }
 
     Client() throws SocketException {
@@ -38,7 +38,7 @@ public class Client extends Booger {
         client_socket.send(packet);
 
         client_socket.receive(packet);
-        client_socket.bind(packet.getSocketAddress());
+//        client_socket.bind(packet.getSocketAddress());
 
         Packet data = Packet.processJoinPacket(packet.getData());
         id = data.id; // Yippeeeeeee should be binded and connected now

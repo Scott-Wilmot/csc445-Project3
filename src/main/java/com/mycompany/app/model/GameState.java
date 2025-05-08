@@ -63,7 +63,7 @@ public class GameState implements Serializable {
         }
         cards.add(new Card(Shape.WILD, Value.W));
 
-        System.out.println(cards.size());
+        System.out.println(cards);
         Collections.shuffle(cards);
         deck = new ArrayDeque<>(cards);
     }
@@ -77,6 +77,7 @@ public class GameState implements Serializable {
                 System.err.println("Duplicate Player Detected.");
                 return false;
             }
+            player.setPlayerID(playerId); // redundant operation for safety
             players.put(playerId, player);
             playerCount++;
             return true;
@@ -215,8 +216,6 @@ public class GameState implements Serializable {
      */
 
     // LOGIC:
-    // Wild Card: Complete
-    // Reverse: 1/2 complete
     // +2: TODO
     public void placeCard(Card card) {
         // fail conditions:
@@ -224,16 +223,23 @@ public class GameState implements Serializable {
         // but if it's a wild card, not a fail condition
         // 2. Not your turn
         System.out.println(card.value() + ", " + card.shape());
-        if (card.shape() != discardPile.peekLast().shape() && card.value() != discardPile.peekLast().value()) {
-            if (card.value() != Value.W && card.shape() != Shape.WILD) {
+//        if (card.shape() != discardPile.peekLast().shape() && card.value() != discardPile.peekLast().value()) {
+//            if ((discardPile.peekLast().value() != Value.W) || (card.value() != Value.W && card.shape() != Shape.WILD)) {
+//                System.out.println("Not a valid card");
+//                return;
+//            }
+//        }
+        if (card.shape() != discardPile.peekLast().shape() && card.value() != discardPile.peekLast().value()
+                && card.value() != Value.W) {
+            if (!(discardPile.peekLast().shape() == Shape.WILD || discardPile.peekLast().shape() == Shape.DRAW_FOUR)) {
                 System.out.println("Not a valid card");
                 return;
             }
-
         }
 
         // pass conditions
-        if (card.shape() == discardPile.peekLast().shape()
+        if (discardPile.peekLast().value() == Value.W ||
+                card.shape() == discardPile.peekLast().shape()
                 || card.value() == discardPile.peekLast().value()
                 || card.shape() == Shape.WILD
                 || card.value() == Value.W) {
@@ -245,9 +251,11 @@ public class GameState implements Serializable {
                 // add logic for +2
                 cardStackCounter += 2;
                 stackActive = true;
+                skipActive = true;
             } else if (card.shape() == Shape.DRAW_FOUR) {
                 cardStackCounter += 4;
                 stackActive = true;
+                skipActive = true;
             } else if (card.shape() == Shape.REVERSE) {
                 turnOrderReversed = !turnOrderReversed;
                 // add logic to allow the player to play another card since it reverses back to them
@@ -255,7 +263,6 @@ public class GameState implements Serializable {
             } else if (card.shape() == Shape.SKIP) {
                 // When the activePlayer plays a skip card, the next player's turn is skipped.
                 skipActive = true;
-
             }
         }
 
@@ -265,6 +272,7 @@ public class GameState implements Serializable {
         }
 
         // end turn
+        players.get(currentTurn).hasPlayedCard(true);
         endTurn();
     }
 
@@ -275,12 +283,17 @@ public class GameState implements Serializable {
      * @modifies {@link Player}'s hand by adding drawAmount card
      */
     public void drawCard(int drawAmount) {
+        if (players.get(currentTurn).hasDrawnCard()) {
+            System.out.println("User has already drawn a card.");
+            return;
+        }
 
         if (drawAmount == 1) {
             players.get(currentTurn).addCard(deck.removeFirst());
-            endTurn();
+            players.get(currentTurn).hasDrawnCard(true);
             return;
         }
+
         for (int i = 0; i < drawAmount; i++) {
             players.get(currentTurn).addCard(deck.removeFirst());
         }
@@ -302,31 +315,47 @@ public class GameState implements Serializable {
      * Accessed by methods after player action such as {@link #placeCard(Card)}.
      */
     void endTurn() {
-        nextTurn();
-        initializeTurn();
+        if (players.get(currentTurn).hasDrawnCard() || players.get(currentTurn).hasPlayedCard()) {
+            nextTurn();
+            initializeTurn();
+            return;
+        } else if (skipActive) {
+            skipActive = false;
+            nextTurn();
+            initializeTurn();
+            return;
+        }
+        System.out.println("Player has not drawn card. Cannot end turn.");
     }
 
     /**
      * Process everything before the start of a player's turn.
      */
     // TODO: add +2 stacking. currently, you can't stack.
+    // todo: end turn bug where it doesn't end turn
     public void initializeTurn() {
-
         // 1: pick up cards
         if (stackActive) {
             // ask the user if they want to place a +2 if they have it in thier hand
             // if they say yes, place it and end turn
             // if not, pick up cards and end turn.
-//            if (players.get(currentTurn).getPlayerHand().contains()) {}
+            if (players.get(currentTurn).hasDrawCard(discardPile.peekLast())) {
+                System.out.println("has valid card");
+                // give the player a choice to stack card
+                // give the player a choice to not stack card
+                // end turn;
+            }
             drawCard(cardStackCounter);
             stackActive = false;
-
+            cardStackCounter = 0;
             endTurn();
         } else if (skipActive) {
             // 2: skip cards
-            skipActive = false;
             endTurn();
         }
+        // resetting parameters
+        players.get(currentTurn).hasDrawnCard(false);
+        players.get(currentTurn).hasPlayedCard(false);
     }
 
     private void resetGame() {
@@ -369,18 +398,17 @@ public class GameState implements Serializable {
 
 
         game.startGame();
-        System.out.println(player.getPlayerHand());
-        System.out.println(player2.getPlayerHand());
-        System.out.println(player3.getPlayerHand());
-        System.out.println(player4.getPlayerHand());
-        System.out.println("Discard Pile " + game.getDiscardPile());
-
         Scanner scanner = new Scanner(System.in);
         System.out.println("Game Started: " + game.getCurrentTurn());
         String input = "";
         while (!input.equals("quit")) {
-            System.out.println("PLayer " + game.getCurrentTurn() + "'s turn");
-            System.out.println("ID: " + game.getCurrentPlayer().id);
+            System.out.println(player.getID() + ": " + player.getPlayerHand());
+            System.out.println(player2.getID() + ": " + player2.getPlayerHand());
+            System.out.println(player3.getID() + ": " + player3.getPlayerHand());
+            System.out.println(player4.getID() + ": " + player4.getPlayerHand());
+            System.out.println("Discard Pile " + game.getDiscardPile());
+
+            System.out.println("Player " + game.getCurrentTurn() + "'s turn");
             input = scanner.nextLine();
             if (input.equals("draw")) {
                 game.drawCard(1);
@@ -396,13 +424,6 @@ public class GameState implements Serializable {
                 game.endTurn();
             }
 
-            if (input.equals("debug")) {
-                System.out.println(player.getPlayerHand());
-                System.out.println(player2.getPlayerHand());
-                System.out.println(player3.getPlayerHand());
-                System.out.println(player4.getPlayerHand());
-                System.out.println("Discard Pile " + game.getDiscardPile());
-            }
         }
     }
 }
