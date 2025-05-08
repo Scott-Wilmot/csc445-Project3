@@ -222,11 +222,18 @@ public class GameState implements Serializable {
         // but if it's a wild card, not a fail condition
         // 2. Not your turn
         System.out.println(card.value() + ", " + card.shape());
+//        if (card.shape() != discardPile.peekLast().shape() && card.value() != discardPile.peekLast().value()) {
+//            if ((discardPile.peekLast().value() != Value.W) || (card.value() != Value.W && card.shape() != Shape.WILD)) {
+//                System.out.println("Not a valid card");
+//                return;
+//            }
+//        }
         if (card.shape() != discardPile.peekLast().shape() && card.value() != discardPile.peekLast().value()) {
-            if (card.value() != Value.W && card.shape() != Shape.WILD) {
+            if (card.shape() != Shape.WILD) {
                 System.out.println("Not a valid card");
                 return;
             }
+            return;
         }
 
         // pass conditions
@@ -311,10 +318,13 @@ public class GameState implements Serializable {
             stackActive = false;
             nextTurn();
             initializeTurn();
+            return;
         }
+
         if (players.get(currentTurn).hasDrawnCard() || players.get(currentTurn).hasPlayedCard()) {
             nextTurn();
             initializeTurn();
+            return;
         }
         System.out.println("Player has not drawn card. Cannot end turn.");
     }
@@ -323,6 +333,7 @@ public class GameState implements Serializable {
      * Process everything before the start of a player's turn.
      */
     // TODO: add +2 stacking. currently, you can't stack.
+    // todo: end turn bug where it doesn't end turn
     public void initializeTurn() {
         // 1: pick up cards
         if (stackActive) {
@@ -336,7 +347,6 @@ public class GameState implements Serializable {
                 // end turn;
             }
             drawCard(cardStackCounter);
-
             endTurn();
         } else if (skipActive) {
             // 2: skip cards
