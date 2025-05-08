@@ -319,13 +319,10 @@ public class GameState implements Serializable {
             nextTurn();
             initializeTurn();
             return;
-        }
-
-        if (skipActive) {
+        } else if (skipActive) {
             skipActive = false;
             nextTurn();
             initializeTurn();
-
             return;
         }
         System.out.println("Player has not drawn card. Cannot end turn.");
@@ -350,6 +347,7 @@ public class GameState implements Serializable {
             }
             drawCard(cardStackCounter);
             stackActive = false;
+            cardStackCounter = 0;
             endTurn();
         } else if (skipActive) {
             // 2: skip cards
