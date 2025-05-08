@@ -231,18 +231,20 @@ public class GameState implements Serializable {
 //        }
         if (card.shape() != discardPile.peekLast().shape() && card.value() != discardPile.peekLast().value()
                 && card.value() != Value.W) {
-            System.out.println("Not a valid card");;
-            return;
+            if (!(discardPile.peekLast().shape() == Shape.WILD || discardPile.peekLast().shape() == Shape.DRAW_FOUR)) {
+                System.out.println("Not a valid card");
+                return;
+            }
         }
 
         // pass conditions
-        if (card.shape() == discardPile.peekLast().shape()
+        if (discardPile.peekLast().value() == Value.W ||
+                card.shape() == discardPile.peekLast().shape()
                 || card.value() == discardPile.peekLast().value()
                 || card.shape() == Shape.WILD
                 || card.value() == Value.W) {
             discardPile.addLast(card);
             players.get(currentTurn).removeCard(card);
-            players.get(currentTurn).hasPlayedCard(true);
 
             // maybe take care of special conditions after the initial card is added
             if (card.shape() == Shape.DRAW_TWO) {
@@ -270,6 +272,7 @@ public class GameState implements Serializable {
         }
 
         // end turn
+        players.get(currentTurn).hasPlayedCard(true);
         endTurn();
     }
 
@@ -312,17 +315,17 @@ public class GameState implements Serializable {
      * Accessed by methods after player action such as {@link #placeCard(Card)}.
      */
     void endTurn() {
-        if (skipActive) {
-            skipActive = false;
-            stackActive = false;
+        if (players.get(currentTurn).hasDrawnCard() || players.get(currentTurn).hasPlayedCard()) {
             nextTurn();
             initializeTurn();
             return;
         }
 
-        if (players.get(currentTurn).hasDrawnCard() || players.get(currentTurn).hasPlayedCard()) {
+        if (skipActive) {
+            skipActive = false;
             nextTurn();
             initializeTurn();
+
             return;
         }
         System.out.println("Player has not drawn card. Cannot end turn.");
@@ -346,6 +349,7 @@ public class GameState implements Serializable {
                 // end turn;
             }
             drawCard(cardStackCounter);
+            stackActive = false;
             endTurn();
         } else if (skipActive) {
             // 2: skip cards
