@@ -104,6 +104,12 @@ public class RoomViewController {
         updateDisplayInterface();
     }
 
+    @FXML
+    private void endTurn(MouseEvent event) throws Exception {
+        gameState.endTurn();
+        updateDisplayInterface();
+    }
+
     /**
      * Adds a new card to the user card group and initializes its interaction behavior.
      * <p>
@@ -191,6 +197,7 @@ public class RoomViewController {
         }
         throw new Exception("Card not found");
     }
+
 
     public void setRoomCode(String roomCodeId) {
         this.roomCodeId.setText(roomCodeId);
