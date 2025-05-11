@@ -63,7 +63,6 @@ public class GameState implements Serializable {
         }
         cards.add(new Card(Shape.WILD, Value.W));
 
-        System.out.println(cards);
         Collections.shuffle(cards);
         deck = new ArrayDeque<>(cards);
     }

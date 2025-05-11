@@ -14,9 +14,11 @@ public class Client {
     GameState gameState;
     int id; // id should have ranges of 0-3?
 
+    static int PORT = 26880;
+
     public static void main(String[] args) throws IOException {
         Client c = new Client();
-        c.connect("129.3.123.136", 56836);
+        c.connect("localhost", PORT);
     }
 
     Client() throws SocketException {
@@ -36,12 +38,24 @@ public class Client {
         DatagramPacket packet = new DatagramPacket(msg, msg.length, InetAddress.getByName(ip), port);
 
         client_socket.send(packet);
-
         client_socket.receive(packet);
-//        client_socket.bind(packet.getSocketAddress());
 
         Packet data = Packet.processJoinPacket(packet.getData());
         id = data.id; // Yippeeeeeee should be binded and connected now
+
+        waiting();
+    }
+
+    // do we need heartbeats to let the server know the client is still alive?
+    public void waiting() throws IOException {
+        System.out.println("Waiting...");
+        while (true){
+            byte[] msg = new byte[1024];
+            DatagramPacket packet = new DatagramPacket(msg, msg.length);
+
+            client_socket.receive(packet);
+            System.out.println("Data Received.");
+        }
     }
 
     public void send_update() throws IOException {
