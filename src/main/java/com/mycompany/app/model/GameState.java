@@ -314,7 +314,7 @@ public class GameState implements Serializable {
      * Can be used by player to end their turn.
      * Accessed by methods after player action such as {@link #placeCard(Card)}.
      */
-    void endTurn() {
+    public void endTurn() {
         if (players.get(currentTurn).hasDrawnCard() || players.get(currentTurn).hasPlayedCard()) {
             nextTurn();
             initializeTurn();
