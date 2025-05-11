@@ -15,10 +15,11 @@ public class Client {
     int id; // id should have ranges of 0-3?
 
     static int PORT = 26880;
+    static String HOST = "localhost";
 
     public static void main(String[] args) throws IOException {
         Client c = new Client();
-        c.connect("localhost", PORT);
+        c.connect(HOST, PORT);
     }
 
     Client() throws SocketException {

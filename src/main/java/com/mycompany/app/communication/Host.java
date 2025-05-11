@@ -23,6 +23,7 @@ public class Host {
     boolean game_started;
 
     int PORT = 26880;
+    String HOST = "0.0.0.0";
 
     Host(String host_name) throws IOException {
         host_channel = initialize_socket(host_name);
@@ -36,7 +37,7 @@ public class Host {
     }
 
     DatagramChannel initialize_socket(String host_name) throws IOException {
-        InetSocketAddress addr = new InetSocketAddress(InetAddress.getByName(host_name), PORT);
+        InetSocketAddress addr = new InetSocketAddress(InetAddress.getByName(HOST), PORT);
         DatagramChannel channel = DatagramChannel.open();
         channel.configureBlocking(false);
         channel.bind(addr);
