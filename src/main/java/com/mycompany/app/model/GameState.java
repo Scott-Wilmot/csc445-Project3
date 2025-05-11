@@ -63,7 +63,6 @@ public class GameState implements Serializable {
         }
         cards.add(new Card(Shape.WILD, Value.W));
 
-        System.out.println(cards);
         Collections.shuffle(cards);
         deck = new ArrayDeque<>(cards);
     }
@@ -319,11 +318,6 @@ public class GameState implements Serializable {
             nextTurn();
             initializeTurn();
             return;
-        } else if (skipActive) {
-            skipActive = false;
-            nextTurn();
-            initializeTurn();
-            return;
         }
         System.out.println("Player has not drawn card. Cannot end turn.");
     }
@@ -351,6 +345,9 @@ public class GameState implements Serializable {
             endTurn();
         } else if (skipActive) {
             // 2: skip cards
+            // INSTEAD OF HAVING A SKIP VALUE, LET'S JUST SAY "THEY HAVE PLAYED THEIR TURN"
+            players.get(currentTurn).hasPlayedCard(true);
+            skipActive = false;
             endTurn();
         }
         // resetting parameters

@@ -22,6 +22,9 @@ public class Host {
     HashMap<Integer, Player> clients;
     boolean game_started;
 
+    int PORT = 26880;
+    String HOST = "0.0.0.0";
+
     Host(String host_name) throws IOException {
         host_channel = initialize_socket(host_name);
         game_started = false;
@@ -34,10 +37,11 @@ public class Host {
     }
 
     DatagramChannel initialize_socket(String host_name) throws IOException {
-        InetSocketAddress addr = new InetSocketAddress(InetAddress.getByName(host_name), 0);
+        InetSocketAddress addr = new InetSocketAddress(InetAddress.getByName(HOST), PORT);
         DatagramChannel channel = DatagramChannel.open();
         channel.configureBlocking(false);
         channel.bind(addr);
+        System.out.println("Channel opened");
         return channel;
     }
 
@@ -51,6 +55,7 @@ public class Host {
     public void open_lobby() throws IOException, InterruptedException {
         int player_count = 1; // Defaults to 1, accounting for host
         ByteBuffer buf = ByteBuffer.allocate(4);
+        System.out.println("Waiting for players...");
 
         // This should not be the only method for holding off game start, since the loop terminates as soon as 4 players are in
         while (player_count < 4 && !game_started) {
@@ -68,6 +73,7 @@ public class Host {
                 buf.put(Packet.createJoinPacket((short) 0, (short) player_count)); // Arbitrary 0 OpCode for join packets
                 buf.flip();
                 host_channel.send(buf, target);
+                System.out.println("Player x joined");
             }
 
             Thread.sleep(100);

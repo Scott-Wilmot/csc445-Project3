@@ -1,5 +1,6 @@
 package com.mycompany.app.ui;
 
+import com.mycompany.app.communication.Main;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
