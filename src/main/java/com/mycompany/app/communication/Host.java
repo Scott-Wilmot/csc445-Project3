@@ -4,14 +4,10 @@ import com.mycompany.app.model.GameState;
 import com.mycompany.app.model.Packet;
 import com.mycompany.app.model.Player;
 
-import javax.xml.crypto.Data;
 import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Set;
 
@@ -112,6 +108,15 @@ public class Host {
             }
 
         }
+    }
+
+    public String getLocalAddress() throws IOException {
+        return ((InetSocketAddress) host_channel.getLocalAddress()).getAddress().getHostAddress();
+    }
+
+    public String getLocalPort() throws IOException {
+        int port =  ((InetSocketAddress) host_channel.getLocalAddress()).getPort();
+        return String.valueOf(port);
     }
 
 }
