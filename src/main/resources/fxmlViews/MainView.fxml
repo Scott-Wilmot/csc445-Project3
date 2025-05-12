@@ -5,6 +5,8 @@
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Text?>
 
 <AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.mycompany.app.ui.uiController.MainController">
@@ -15,11 +17,28 @@
                     <content>
                         <AnchorPane prefHeight="200.0" prefWidth="343.0">
                             <children>
-                                <Text layoutX="15.0" layoutY="33.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Name" />
-                                <TextField fx:id="createRoomUsername" layoutX="15.0" layoutY="44.0" />
-                                <Text layoutX="15.0" layoutY="88.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Room Code" />
-                                <TextField fx:id="createRoomCode" layoutX="15.0" layoutY="99.0" />
-                        <Button fx:id="createRoomButton" layoutX="125.0" layoutY="143.0" mnemonicParsing="false" onAction="#handleCreateRoomClick" text="Create Room" />
+                        <VBox alignment="CENTER" layoutX="108.0" layoutY="19.0" prefHeight="152.0" prefWidth="126.0" spacing="10.0">
+                           <children>
+                              <VBox alignment="CENTER" prefHeight="43.0" prefWidth="116.0">
+                                 <children>
+                                    <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="10.0">
+                                       <children>
+                                          <Text strokeType="OUTSIDE" strokeWidth="0.0" text="IP:" />
+                                          <Text fx:id="ip" strokeType="OUTSIDE" strokeWidth="0.0" text="&lt;Empty&gt;" />
+                                       </children>
+                                    </HBox>
+                                    <HBox alignment="CENTER" prefHeight="18.0" prefWidth="59.0" spacing="10.0">
+                                       <children>
+                                          <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Port" />
+                                          <Text fx:id="port" strokeType="OUTSIDE" strokeWidth="0.0" text="&lt;Empty&gt;" />
+                                       </children>
+                                    </HBox>
+                                 </children>
+                              </VBox>
+                              <Button fx:id="createRoomButton" mnemonicParsing="false" onAction="#handleCreateRoomClick" text="Create Room" />
+                              <Button fx:id="startGameButton" mnemonicParsing="false" onAction="#handleStartGame" text="Start Game" />
+                           </children>
+                        </VBox>
                             </children>
                         </AnchorPane>
                     </content>
