@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.*;
 
 public class Client {
@@ -131,12 +133,9 @@ public class Client {
     // how long it should take before a new election is started
     int electionTimeoutMS = 3000;
     // how often the leader should send their heartbeat
-    int heartbeatTimeoutMS = 2000;
-
-    // Timer for election timeouts
-    private ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-    private ScheduledFuture<?> electionTimer;
-
+    int heartbeatTimeoutMS = 1400;
+    // who the client voted for (during the election)
+    int vote = -1;
 
     // the states that these clients can be in
     enum RaftState {
@@ -146,6 +145,18 @@ public class Client {
     }
     RaftState raftState = RaftState.FOLLOWER; // there are 3 states; follower, candidate, leader
     // initially, the host starts off as leader,
+
+    private Timer electionTimer;
+    private long lastHeartbeatReceived = System.currentTimeMillis();
+
+
+    /**
+     * In RAFT typical, you send a heartbeat every x ms.
+     * In our modified RAFT, you request a heartbeat and receive it.
+     */
+    public void requestHeartbeat() throws IOException {
+        byte[] requestHeartbeat = Packet.createAckPacket(Packet.Opcode.HEARTBEAT, 0);
+    }
 
     /**
      * AppendEntries RPCs - these are known as heartbeats in the RAFT protocol.
@@ -178,17 +189,36 @@ public class Client {
      * 4. If timer goes off, then we need a new election to elect a new leader. (handleElectionTimeout)
      */
     private void startRaftTimer() {
-        // Cancel any existing timer
-        if (electionTimer != null && !electionTimer.isDone()) {
-            electionTimer.cancel(false);
+        if (electionTimer != null) {
+            electionTimer.cancel();
         }
 
-        // Schedule a new timer
-        electionTimer = scheduler.schedule(this::handleElectionTimeout,
-                electionTimeoutMS,
-                TimeUnit.MILLISECONDS);
-        System.out.println("Raft election timer started with timeout: " + electionTimeoutMS + "ms");
+        electionTimer = new Timer(true);
+
+        // Schedule the timer to run repeatedly to check for heartbeat
+        electionTimer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                long currentTime = System.currentTimeMillis();
+
+                // Follower checks for heartbeat timeout
+                if (raftState == RaftState.FOLLOWER) {
+                    try {
+                        requestHeartbeat();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    // Check if enough time has passed without a heartbeat
+                    // we need to implement updating this when we receive a heartbeat, which should be added to the main switch-case
+                    if (currentTime - lastHeartbeatReceived > electionTimeoutMS) {
+                        handleElectionTimeout();
+                    }
+                }
+            }
+        }, 0, 500); // Check every 500ms; tune as needed
     }
+
 
     /**
      * A helper class for creating a new election.
@@ -201,14 +231,19 @@ public class Client {
         }
     }
 
-    
+    /**
+     * Finally, after startRaftTimer runs out, and handleElectionTimeout succeeds, we start a new election.
+     * 1. Change state from Follower to Candidate.
+     * 2. Increase the term.
+     * 3. Vote for yourself.
+     * 4. draw the rest of the owl
+     *
+     */
     public void holdRAFTElection() {
         raftState = RaftState.CANDIDATE;
-        currentTerm++; // Increment term
-        votedFor = this.id; // Vote for self
-        System.out.println("Node " + id + " starting election for term " + currentTerm);
-
         currentTerm++;
+        vote = this.id;
+        System.out.println("Node " + id + " starting election for term " + currentTerm);
     }
 
 }

@@ -24,6 +24,7 @@ public class Packet {
      */
     public enum Opcode {
         JOIN,
+        START,
         SEND_GAME_STATE,
         HEARTBEAT,
     }
