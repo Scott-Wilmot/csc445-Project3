@@ -19,7 +19,7 @@ public class Client {
         c.connect("129.3.123.136", 56836);
     }
 
-    Client() throws SocketException {
+    public Client() throws SocketException {
         client_socket = new DatagramSocket(0);
         gameState = new GameState();
     }

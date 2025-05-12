@@ -22,14 +22,14 @@ public class Host {
     HashMap<Integer, Player> clients;
     boolean game_started;
 
-    Host(String host_name) throws IOException {
+    public Host(String host_name) throws IOException {
         host_channel = initialize_socket(host_name);
         game_started = false;
         clients = new HashMap<>();
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        Host host = new Host("localhost");
+        Host host = new Host(InetAddress.getLocalHost().getHostName());
         host.open_lobby();
     }
 
@@ -49,6 +49,7 @@ public class Host {
      * @throws InterruptedException
      */
     public void open_lobby() throws IOException, InterruptedException {
+        System.out.println("local_addr: " + host_channel.getLocalAddress());
         int player_count = 1; // Defaults to 1, accounting for host
         ByteBuffer buf = ByteBuffer.allocate(4);
 
@@ -59,6 +60,7 @@ public class Host {
             buf.flip();
 
             if (addr != null) {
+                System.out.println("Origin address: " + addr);
                 InetSocketAddress ip = (InetSocketAddress) addr;
                 int port = ((InetSocketAddress) addr).getPort();
                 clients.put(player_count++, new Player(ip.getAddress(), port));
