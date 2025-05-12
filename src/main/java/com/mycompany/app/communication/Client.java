@@ -2,6 +2,7 @@ package com.mycompany.app.communication;
 
 import com.mycompany.app.model.GameState;
 import com.mycompany.app.model.Packet;
+import com.mycompany.app.model.Player;
 
 import java.io.IOException;
 import java.net.*;
@@ -44,30 +45,6 @@ public class Client {
 
         Packet data = Packet.processJoinPacket(packet.getData());
         id = data.id; // Yippeeeeeee should be binded and connected now
-
-        waiting();
-    }
-
-    // USED FOR RAFT
-    int currentTerm = 1;
-    String state = "Follower";
-
-    // do we need heartbeats to let the server know the client is still alive?
-    public void waiting() throws IOException {
-        System.out.println("Waiting...");
-        while (true){
-            byte[] msg = new byte[1024];
-            DatagramPacket packet = new DatagramPacket(msg, msg.length);
-
-            client_socket.receive(packet);
-            System.out.println("Data Received.");
-        }
-    }
-
-    // if the host becomes unavailable, it's time to vote for a new leader
-    public void holdRAFTElection() {
-        currentTerm++;
-
     }
 
     public void send_update() throws IOException {
@@ -130,7 +107,63 @@ public class Client {
 
         // Now Reconstruct and update GameState
         gameState = Packet.processGameStatePackets(map);
+    }
 
+    // main loop logic where we determine where everything goes
+    public void waiting() throws IOException {
+        System.out.println("Waiting...");
+        while (true){
+            byte[] msg = new byte[1024];
+            DatagramPacket packet = new DatagramPacket(msg, msg.length);
+
+            client_socket.receive(packet);
+            System.out.println("Data Received.");
+        }
+    }
+
+
+    /**
+     * RAFT IMPLEMENTATION
+     */
+    int currentTerm = 1;
+
+    // how long it should take before a new election is started
+    int electionTimeoutMS = 3000;
+    // how often the leader should send their heartbeat
+    int heartbeatTimeoutMS = 2000;
+
+    // the states that these clients can be in
+    enum RaftState {
+        LEADER,
+        CANDIDATE,
+        FOLLOWER
+    }
+    RaftState raftState = RaftState.FOLLOWER; // there are 3 states; follower, candidate, leader
+    // initially, the host starts off as leader,
+
+    /**
+     * AppendEntries RPCs - these are known as heartbeats in the RAFT protocol.
+     * It is used to let the followers know that the leader is still alive.
+     *
+     * @throws IOException - if an I/O error occurs (should never occur)
+     */
+    public void sendHeartbeats() throws IOException {
+        // fail condition
+        if (raftState == RaftState.FOLLOWER ) {
+            // maybe reset the timer too?
+            return;
+        }
+
+        byte[] heartbeat = Packet.createAckPacket(Packet.Opcode.HEARTBEAT, currentTerm);
+        DatagramPacket heartbeatPacket = new DatagramPacket(heartbeat, heartbeat.length);
+        for (Player players : gameState.getPlayers().values()) {
+            client_socket.send(heartbeatPacket);
+        }
+    }
+
+    // if the host becomes unavailable, it's time to vote for a new leader
+    public void holdRAFTElection() {
+        currentTerm++;
     }
 
 }

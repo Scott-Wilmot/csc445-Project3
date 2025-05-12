@@ -22,7 +22,7 @@ public class Packet {
     /**
      * Used to reference what the type of data the client is attempting to send
      */
-    enum Opcode {
+    public enum Opcode {
         JOIN,
         SEND_GAME_STATE,
         HEARTBEAT,
@@ -154,26 +154,58 @@ public class Packet {
     }
 
     /**
-     * Creates an acknowledgement packet used to verify server-client communication.
+     * Creates a acknowledgement packet used to verify server-client communication.
      * It can be used to join the game and verify if the client joined the game.
+     * It is also used as a heartbeat packet for RAFT Protocol.
      * +------------+-----------+
      * |  OP-CODE   | BLOCK-NUM |
      * +------------+-----------+
-     * | [2 bytes]  | [2 bytes] |
+     * | [2 bytes]  | [4 bytes] |
      * +------------+-----------+
      * <p/>
      *
-     * @param opcode   - the request
-     * @param blockNum - unique number identifying when this packet was sent in relation to other packets
+     * @param opcode   - the request {Heartbeat, Ack}
+     * @param specialNum - unique number sent through this packet
      * @return a byte[] packet with the opcode and blockNum
      * @throws IOException - if an I/O error occurs (should never occur)
      */
-    static byte[] createAckPacket(Opcode opcode, int blockNum) throws IOException {
+    public static byte[] createAckPacket(Opcode opcode, int specialNum) throws IOException {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
+        // Write the 2-byte opcode
         output.write(new byte[]{0x00, (byte) opcode.ordinal()});
-        output.write((byte) (blockNum >> 8));
-        output.write((byte) (blockNum & 0xFF));
+
+        // Write the 4-byte blockNum (big-endian order)
+        output.write((byte) (specialNum >> 24));
+        output.write((byte) (specialNum >> 16));
+        output.write((byte) (specialNum >> 8));
+        output.write((byte) specialNum);
+
         return output.toByteArray();
+    }
+
+    /**
+     * Extracts the special number from an acknowledgement packet.
+     * Assumes the packet format is:
+     * +------------+-----------+
+     * |  OP-CODE   | BLOCK-NUM |
+     * +------------+-----------+
+     * | [2 bytes]  | [4 bytes] |
+     * +------------+-----------+
+     * The block number is expected to be a 4-byte integer in big-endian order starting at offset 2.
+     *
+     * @param packet - the byte array containing the acknowledgement packet
+     * @return the extracted special number as an int
+     */
+    static int getBlockNumFromAckPacket(byte[] packet) {
+        // Use bitwise shifts and the bitwise OR operator (|) to combine the bytes.
+        // The & 0xFF is important to treat each byte as an unsigned value before shifting,
+        // preventing sign extension issues with negative byte values in Java.
+        int blockNum = ((packet[2] & 0xFF) << 24) |
+                ((packet[3] & 0xFF) << 16) |
+                ((packet[4] & 0xFF) << 8)  |
+                (packet[5] & 0xFF);
+
+        return blockNum;
     }
 
     /**
@@ -181,10 +213,10 @@ public class Packet {
      * +------------+-----------+-------------+------------+
      * |  OP-CODE   | BLOCK-NUM | ENCRYPTION  |    DATA    |
      * +------------+-----------+-------------+------------+
-     * | [2 bytes]  | [2 bytes] | [16 bytes]  | [Variable] |
+     * | [2 bytes]  | [4 bytes] | [16 bytes]  | [Variable] |
      * +------------+-----------+-------------+------------+
      * DATA_SIZE is equal to: PACKET_SIZE - OP_CODE_SIZE - BLOCK_NUM_SIZE - ENCRYPTION_SIZE;
-     * Or simply, DATA_SIZE = PACKET_SIZE - 20;
+     * Or simply, DATA_SIZE = PACKET_SIZE - 22;
      * <p/>
      *
      * @param opcode        - the request made by the client {JOIN, SEND_GAME_STATE, HEARTBEAT}
@@ -205,8 +237,10 @@ public class Packet {
 
         // Creating the packet
         output.write(new byte[]{0x00, (byte) opcode.ordinal()});
+        output.write((byte) (blockNum >> 24));
+        output.write((byte) (blockNum >> 16));
         output.write((byte) (blockNum >> 8));
-        output.write((byte) (blockNum & 0xFF));
+        output.write((byte) blockNum);
         output.write(stateBytes);
 
         return output.toByteArray();
