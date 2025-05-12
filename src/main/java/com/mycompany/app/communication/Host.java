@@ -18,8 +18,11 @@ public class Host {
     HashMap<Integer, Player> clients;
     boolean game_started;
 
+    int PORT = 26880;
+    String HOST = "0.0.0.0";
+
     public Host(String host_name) throws IOException {
-        host_channel = initialize_socket(host_name);
+        host_channel = initialize_socket(HOST);
         game_started = false;
         clients = new HashMap<>();
     }
@@ -39,6 +42,7 @@ public class Host {
         DatagramChannel channel = DatagramChannel.open();
         channel.configureBlocking(false);
         channel.bind(addr);
+        System.out.println("Channel opened");
         return channel;
     }
 
@@ -53,6 +57,7 @@ public class Host {
         System.out.println("local_addr: " + host_channel.getLocalAddress());
         int player_count = 1; // Defaults to 1, accounting for host
         ByteBuffer buf = ByteBuffer.allocate(4);
+        System.out.println("Waiting for players...");
 
         // This should not be the only method for holding off game start, since the loop terminates as soon as 4 players are in
         while (player_count < 4 && !game_started) {
@@ -71,6 +76,7 @@ public class Host {
                 buf.put(Packet.createJoinPacket((short) 0, (short) player_count)); // Arbitrary 0 OpCode for join packets
                 buf.flip();
                 host_channel.send(buf, target);
+                System.out.println("Player x joined");
             }
 
             Thread.sleep(100);
@@ -111,10 +117,8 @@ public class Host {
                 }
 
             }
-
         }
     }
-
     public String getLocalAddress() throws IOException {
         return ((InetSocketAddress) host_channel.getLocalAddress()).getAddress().getHostAddress();
     }
@@ -123,5 +127,4 @@ public class Host {
         int port =  ((InetSocketAddress) host_channel.getLocalAddress()).getPort();
         return String.valueOf(port);
     }
-
 }
