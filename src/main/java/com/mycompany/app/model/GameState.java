@@ -250,11 +250,9 @@ public class GameState implements Serializable {
                 // add logic for +2
                 cardStackCounter += 2;
                 stackActive = true;
-                skipActive = true;
             } else if (card.shape() == Shape.DRAW_FOUR) {
                 cardStackCounter += 4;
                 stackActive = true;
-                skipActive = true;
             } else if (card.shape() == Shape.REVERSE) {
                 turnOrderReversed = !turnOrderReversed;
                 // add logic to allow the player to play another card since it reverses back to them
@@ -341,6 +339,8 @@ public class GameState implements Serializable {
             }
             drawCard(cardStackCounter);
             stackActive = false;
+            // enable skip for the next turn so their turn ends
+            skipActive = true;
             cardStackCounter = 0;
             endTurn();
         } else if (skipActive) {
