@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
+import java.util.concurrent.*;
 
 public class Client {
 
@@ -132,6 +133,11 @@ public class Client {
     // how often the leader should send their heartbeat
     int heartbeatTimeoutMS = 2000;
 
+    // Timer for election timeouts
+    private ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    private ScheduledFuture<?> electionTimer;
+
+
     // the states that these clients can be in
     enum RaftState {
         LEADER,
@@ -155,14 +161,53 @@ public class Client {
         }
 
         byte[] heartbeat = Packet.createAckPacket(Packet.Opcode.HEARTBEAT, currentTerm);
-        DatagramPacket heartbeatPacket = new DatagramPacket(heartbeat, heartbeat.length);
         for (Player players : gameState.getPlayers().values()) {
+            DatagramPacket heartbeatPacket = new DatagramPacket(heartbeat, heartbeat.length, players.getAddress(), players.getPort());
             client_socket.send(heartbeatPacket);
         }
     }
 
-    // if the host becomes unavailable, it's time to vote for a new leader
+    /**
+     * start the timer to determine if any host has disconnected;
+     * sets the condition for when elections should be held
+     *
+     * How does it work?
+     * 1. You cancel a timer that may have existed before. (This means that we received the heartbeat)
+     * 2. You create a timer that tells it to hold an election, if the heartbeat times out.
+     * 3. If timer doesn't go off, we repeat 1-2 forever.
+     * 4. If timer goes off, then we need a new election to elect a new leader. (handleElectionTimeout)
+     */
+    private void startRaftTimer() {
+        // Cancel any existing timer
+        if (electionTimer != null && !electionTimer.isDone()) {
+            electionTimer.cancel(false);
+        }
+
+        // Schedule a new timer
+        electionTimer = scheduler.schedule(this::handleElectionTimeout,
+                electionTimeoutMS,
+                TimeUnit.MILLISECONDS);
+        System.out.println("Raft election timer started with timeout: " + electionTimeoutMS + "ms");
+    }
+
+    /**
+     * A helper class for creating a new election.
+     * It makes sure that the leader is not creating a new election.
+     */
+    private void handleElectionTimeout() {
+        if (raftState != RaftState.LEADER) {
+            System.out.println("Election timeout occurred. Starting new election.");
+            holdRAFTElection(); // Transition to Candidate and start election
+        }
+    }
+
+    
     public void holdRAFTElection() {
+        raftState = RaftState.CANDIDATE;
+        currentTerm++; // Increment term
+        votedFor = this.id; // Vote for self
+        System.out.println("Node " + id + " starting election for term " + currentTerm);
+
         currentTerm++;
     }
 
