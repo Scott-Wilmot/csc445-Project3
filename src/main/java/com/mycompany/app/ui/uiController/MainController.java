@@ -1,5 +1,8 @@
 package com.mycompany.app.ui.uiController;
 
+import com.mycompany.app.communication.Client;
+import com.mycompany.app.communication.Host;
+import com.mycompany.app.ui.MainApp;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -11,6 +14,7 @@ import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.net.SocketException;
 import java.net.URL;
 import java.util.Objects;
 
@@ -25,22 +29,49 @@ public class MainController {
     @FXML private TextField createRoomUsername;
     @FXML private TextField createRoomCode;
 
+    MainApp mainApp;
+
+    public void setMainApp(MainApp mainApp) {
+        this.mainApp = mainApp;
+    }
+
     @FXML
     private void handleJoinRoomClick(ActionEvent event) {
-        String username = joinRoomUsername.getText();
-        String roomCode = joinRoomCode.getText();
-        if (validateInputs(username, roomCode)) {
-            loadRoomScene(event, username, roomCode, "Uno - Joined Room");
+        String ip = joinRoomUsername.getText();
+        int port = Integer.parseInt(joinRoomCode.getText());
+        if (validateInputs(ip, String.valueOf(port))) {
+//            loadRoomScene(event, ip, String.valueOf(port), "Uno - Joined Room");
+            joinRoomButton.setDisable(true);
+
+            new Thread(() -> {
+                try {
+                    Client client = mainApp.initClient();
+                    client.connect(ip, port); // make connect a boolean to indicate a success or failure to then handle if the button turns back on or not
+                    System.out.println("connected");
+                    joinRoomButton.setDisable(false);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }).start();
         }
     }
 
     @FXML
     private void handleCreateRoomClick(ActionEvent event) {
-        String username = createRoomUsername.getText();
-        String roomCode = createRoomCode.getText();
-        if (validateInputs(username, roomCode)) {
-            loadRoomScene(event, username, roomCode, "Uno - Created Room");
-        }
+        // This may be unnecessary if open_lobby() generates Ip and port automatically, localHost handling?
+//        String username = createRoomUsername.getText();
+//        String roomCode = createRoomCode.getText();
+        createRoomButton.setDisable(true);
+
+        new Thread(() -> {
+            try {
+                Host host = mainApp.initHost();
+                host.open_lobby();
+                createRoomButton.setDisable(false);
+            } catch (IOException | InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }).start();
     }
 
     private boolean validateInputs(String username, String roomCode) {

@@ -26,13 +26,13 @@ public class Host {
     String HOST = "0.0.0.0";
 
     Host() throws IOException {
-        host_channel = initialize_socket();
+        host_channel = initialize_socket(HOST);
         game_started = false;
         clients = new HashMap<>();
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        Host host = new Host();
+        Host host = new Host(InetAddress.getLocalHost().getHostName());
         host.open_lobby();
     }
 
@@ -53,6 +53,7 @@ public class Host {
      * @throws InterruptedException
      */
     public void open_lobby() throws IOException, InterruptedException {
+        System.out.println("local_addr: " + host_channel.getLocalAddress());
         int player_count = 1; // Defaults to 1, accounting for host
         ByteBuffer buf = ByteBuffer.allocate(4);
         System.out.println("Waiting for players...");
@@ -64,6 +65,7 @@ public class Host {
             buf.flip();
 
             if (addr != null) {
+                System.out.println("Origin address: " + addr);
                 InetSocketAddress ip = (InetSocketAddress) addr;
                 int port = ((InetSocketAddress) addr).getPort();
                 clients.put(player_count++, new Player(ip.getAddress(), port));
@@ -112,7 +114,9 @@ public class Host {
                         host_channel.receive(recv);
                     }
                 }
+
             }
+
         }
     }
 
