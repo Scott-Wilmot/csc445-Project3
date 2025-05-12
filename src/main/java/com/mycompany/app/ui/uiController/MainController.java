@@ -59,6 +59,8 @@ public class MainController {
                     Client client = mainApp.initClient();
                     client.connect(ip, port); // make connect a boolean to indicate a success or failure to then handle if the button turns back on or not
                     System.out.println("connected");
+                } catch (SocketException e) {
+                    //showAlert("Join Failure", "Failed to connect to Host");
                     joinRoomButton.setDisable(false);
                 } catch (IOException e) {
                     throw new RuntimeException(e);

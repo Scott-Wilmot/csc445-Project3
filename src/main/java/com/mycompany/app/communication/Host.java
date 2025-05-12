@@ -30,7 +30,12 @@ public class Host {
     }
 
     DatagramChannel initialize_socket(String host_name) throws IOException {
-        InetSocketAddress addr = new InetSocketAddress(InetAddress.getByName(host_name), 0);
+        InetSocketAddress addr;
+        if (host_name == "localhost") {
+            addr = new InetSocketAddress(InetAddress.getByName(host_name), 0);
+        } else {
+            addr = new InetSocketAddress(InetAddress.getLocalHost().getHostName(), 0);
+        }
         DatagramChannel channel = DatagramChannel.open();
         channel.configureBlocking(false);
         channel.bind(addr);
