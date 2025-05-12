@@ -25,6 +25,7 @@ public class Packet {
     enum Opcode {
         JOIN,
         SEND_GAME_STATE,
+        HEARTBEAT,
     }
 
     /**
@@ -164,7 +165,7 @@ public class Packet {
      *
      * @param opcode   - the request
      * @param blockNum - unique number identifying when this packet was sent in relation to other packets
-     * @return a byte[] packet with the opcode and blockNu
+     * @return a byte[] packet with the opcode and blockNum
      * @throws IOException - if an I/O error occurs (should never occur)
      */
     static byte[] createAckPacket(Opcode opcode, int blockNum) throws IOException {
@@ -186,7 +187,7 @@ public class Packet {
      * Or simply, DATA_SIZE = PACKET_SIZE - 20;
      * <p/>
      *
-     * @param opcode        - the request made by the client {JOIN, SEND_GAME_STATE}
+     * @param opcode        - the request made by the client {JOIN, SEND_GAME_STATE, HEARTBEAT}
      * @param blockNum      - unique number used to identify packet data for ordering
      * @param state         - the {@link GameState} shared between servers-clients
      * @param encryptionKey - key used for encrypting packet communication

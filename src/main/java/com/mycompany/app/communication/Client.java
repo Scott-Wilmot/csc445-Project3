@@ -15,7 +15,8 @@ public class Client {
     int id; // id should have ranges of 0-3?
 
     static int PORT = 26880;
-    static String HOST = "localhost";
+    static String HOST = "129.3.20.24";
+
 
     public static void main(String[] args) throws IOException {
         Client c = new Client();
@@ -47,6 +48,10 @@ public class Client {
         waiting();
     }
 
+    // USED FOR RAFT
+    int currentTerm = 1;
+    String state = "Follower";
+
     // do we need heartbeats to let the server know the client is still alive?
     public void waiting() throws IOException {
         System.out.println("Waiting...");
@@ -57,6 +62,12 @@ public class Client {
             client_socket.receive(packet);
             System.out.println("Data Received.");
         }
+    }
+
+    // if the host becomes unavailable, it's time to vote for a new leader
+    public void holdRAFTElection() {
+        currentTerm++;
+
     }
 
     public void send_update() throws IOException {

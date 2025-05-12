@@ -25,18 +25,18 @@ public class Host {
     int PORT = 26880;
     String HOST = "0.0.0.0";
 
-    Host(String host_name) throws IOException {
-        host_channel = initialize_socket(host_name);
+    Host() throws IOException {
+        host_channel = initialize_socket();
         game_started = false;
         clients = new HashMap<>();
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        Host host = new Host("localhost");
+        Host host = new Host();
         host.open_lobby();
     }
 
-    DatagramChannel initialize_socket(String host_name) throws IOException {
+    DatagramChannel initialize_socket() throws IOException {
         InetSocketAddress addr = new InetSocketAddress(InetAddress.getByName(HOST), PORT);
         DatagramChannel channel = DatagramChannel.open();
         channel.configureBlocking(false);
@@ -112,9 +112,7 @@ public class Host {
                         host_channel.receive(recv);
                     }
                 }
-
             }
-
         }
     }
 
