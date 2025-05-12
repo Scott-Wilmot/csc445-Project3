@@ -63,7 +63,6 @@ public class GameState implements Serializable {
         }
         cards.add(new Card(Shape.WILD, Value.W));
 
-        System.out.println(cards);
         Collections.shuffle(cards);
         deck = new ArrayDeque<>(cards);
     }
@@ -314,13 +313,8 @@ public class GameState implements Serializable {
      * Can be used by player to end their turn.
      * Accessed by methods after player action such as {@link #placeCard(Card)}.
      */
-    void endTurn() {
+    public void endTurn() {
         if (players.get(currentTurn).hasDrawnCard() || players.get(currentTurn).hasPlayedCard()) {
-            nextTurn();
-            initializeTurn();
-            return;
-        } else if (skipActive) {
-            skipActive = false;
             nextTurn();
             initializeTurn();
             return;
@@ -351,6 +345,9 @@ public class GameState implements Serializable {
             endTurn();
         } else if (skipActive) {
             // 2: skip cards
+            // INSTEAD OF HAVING A SKIP VALUE, LET'S JUST SAY "THEY HAVE PLAYED THEIR TURN"
+            players.get(currentTurn).hasPlayedCard(true);
+            skipActive = false;
             endTurn();
         }
         // resetting parameters
