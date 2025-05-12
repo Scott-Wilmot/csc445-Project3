@@ -4,14 +4,10 @@ import com.mycompany.app.model.GameState;
 import com.mycompany.app.model.Packet;
 import com.mycompany.app.model.Player;
 
-import javax.xml.crypto.Data;
 import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Set;
 
@@ -37,7 +33,12 @@ public class Host {
     }
 
     DatagramChannel initialize_socket(String host_name) throws IOException {
-        InetSocketAddress addr = new InetSocketAddress(InetAddress.getByName(HOST), PORT);
+        InetSocketAddress addr;
+        if (host_name == "localhost") {
+            addr = new InetSocketAddress(InetAddress.getByName(host_name), 0);
+        } else {
+            addr = new InetSocketAddress(InetAddress.getLocalHost().getHostName(), 0);
+        }
         DatagramChannel channel = DatagramChannel.open();
         channel.configureBlocking(false);
         channel.bind(addr);
@@ -117,5 +118,13 @@ public class Host {
 
             }
         }
+    }
+    public String getLocalAddress() throws IOException {
+        return ((InetSocketAddress) host_channel.getLocalAddress()).getAddress().getHostAddress();
+    }
+
+    public String getLocalPort() throws IOException {
+        int port =  ((InetSocketAddress) host_channel.getLocalAddress()).getPort();
+        return String.valueOf(port);
     }
 }
