@@ -22,7 +22,7 @@ public class Host {
     String HOST = "0.0.0.0";
 
     public Host(String host_name) throws IOException {
-        host_channel = initialize_socket(HOST);
+        host_channel = initialize_socket(host_name);
         game_started = false;
         clients = new HashMap<>();
     }
@@ -34,7 +34,7 @@ public class Host {
 
     DatagramChannel initialize_socket(String host_name) throws IOException {
         InetSocketAddress addr;
-        if (host_name == "localhost") {
+        if (host_name.equals("localhost")) {
             addr = new InetSocketAddress(InetAddress.getByName(host_name), 0);
         } else {
             addr = new InetSocketAddress(InetAddress.getLocalHost().getHostName(), 0);

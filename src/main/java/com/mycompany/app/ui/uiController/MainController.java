@@ -3,7 +3,7 @@ package com.mycompany.app.ui.uiController;
 import com.mycompany.app.communication.Client;
 import com.mycompany.app.communication.Host;
 import com.mycompany.app.ui.MainApp;
-import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -16,9 +16,9 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.net.SocketException;
 import java.net.URL;
 import java.util.Objects;
+
 
 public class MainController {
 
@@ -50,22 +50,37 @@ public class MainController {
     private void handleJoinRoomClick(ActionEvent event) {
         String ip = joinRoomUsername.getText();
         int port = Integer.parseInt(joinRoomCode.getText());
+
         if (validateInputs(ip, String.valueOf(port))) {
 //            loadRoomScene(event, ip, String.valueOf(port), "Uno - Joined Room");
             joinRoomButton.setDisable(true);
 
-            new Thread(() -> {
-                try {
-                    Client client = mainApp.initClient();
-                    client.connect(ip, port); // make connect a boolean to indicate a success or failure to then handle if the button turns back on or not
-                    System.out.println("connected");
-                    return;
-                } catch (Exception e) {
-                    joinRoomButton.setDisable(false);
+            Task task = new Task() {
+                @Override
+                protected Boolean call() throws Exception {
+                    try {
+                        Client client = mainApp.initClient();
+                        return client.connect(ip, port);
+                    } catch (IOException e) {
+                        return false; // Default to failure on error
+                    }
                 }
-            }).start();
+            };
 
-            showAlert("Join Failure", "Failed to connect to Host");
+            task.setOnSucceeded(success -> {
+                boolean succeeded = (boolean) task.getValue();
+                if (succeeded) {
+                    System.out.println("Connection successful");
+                } else {
+                    joinRoomButton.setDisable(false);
+                    showAlert("Connection Error", "Failed to connect to host socket");
+                }
+            });
+
+            new Thread(task).start();
+
+            // Failure handling for FauLT TolERaNcE
+
         }
     }
 

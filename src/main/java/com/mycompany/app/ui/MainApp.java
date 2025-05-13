@@ -37,7 +37,7 @@ public class MainApp extends Application {
     }
 
     public Host initHost() throws IOException {
-        host = new Host(null);
+        host = new Host("localhost");
         return host;
     }
 

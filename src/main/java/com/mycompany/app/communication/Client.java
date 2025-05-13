@@ -2,15 +2,11 @@ package com.mycompany.app.communication;
 
 import com.mycompany.app.model.GameState;
 import com.mycompany.app.model.Packet;
-import com.mycompany.app.model.Player;
 
 import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.*;
 
 public class Client {
 
@@ -19,8 +15,7 @@ public class Client {
     int id; // id should have ranges of 0-3?
 
     static int PORT = 26880;
-    static String HOST = "129.3.20.24";
-
+    static String HOST = "localhost";
 
     public static void main(String[] args) throws IOException {
         Client c = new Client();
@@ -39,15 +34,36 @@ public class Client {
      * @param port
      * @throws SocketException
      */
-    public void connect(String ip, int port) throws IOException {
+    public boolean connect(String ip, int port) throws IOException {
         byte[] msg = Packet.createJoinPacket((short) 0, (short) 0);
         DatagramPacket packet = new DatagramPacket(msg, msg.length, InetAddress.getByName(ip), port);
 
-        client_socket.send(packet);
-        client_socket.receive(packet);
+        client_socket.setSoTimeout(200);
 
-        Packet data = Packet.processJoinPacket(packet.getData());
-        id = data.id; // Yippeeeeeee should be binded and connected now
+        client_socket.send(packet);
+        try {
+            client_socket.receive(packet);
+            Packet data = Packet.processJoinPacket(packet.getData());
+            id = data.id; // Yippeeeeeee should be binded and connected now
+            return true;
+        } catch (SocketTimeoutException t) {
+            System.out.println("Timeout");
+            return false;
+        } finally {
+            client_socket.setSoTimeout(0);
+        }
+    }
+
+    // do we need heartbeats to let the server know the client is still alive?
+    public void waiting() throws IOException {
+        System.out.println("Waiting...");
+        while (true){
+            byte[] msg = new byte[1024];
+            DatagramPacket packet = new DatagramPacket(msg, msg.length);
+
+            client_socket.receive(packet);
+            System.out.println("Data Received.");
+        }
     }
 
     public void send_update() throws IOException {
@@ -110,140 +126,7 @@ public class Client {
 
         // Now Reconstruct and update GameState
         gameState = Packet.processGameStatePackets(map);
-    }
 
-    // main loop logic where we determine where everything goes
-    public void waiting() throws IOException {
-        System.out.println("Waiting...");
-        while (true){
-            byte[] msg = new byte[1024];
-            DatagramPacket packet = new DatagramPacket(msg, msg.length);
-
-            client_socket.receive(packet);
-            System.out.println("Data Received.");
-        }
-    }
-
-
-    /**
-     * RAFT IMPLEMENTATION
-     */
-    int currentTerm = 1;
-
-    // how long it should take before a new election is started
-    int electionTimeoutMS = 3000;
-    // how often the leader should send their heartbeat
-    int heartbeatTimeoutMS = 1400;
-    // who the client voted for (during the election)
-    int vote = -1;
-
-    // the states that these clients can be in
-    enum RaftState {
-        LEADER,
-        CANDIDATE,
-        FOLLOWER
-    }
-    RaftState raftState = RaftState.FOLLOWER; // there are 3 states; follower, candidate, leader
-    // initially, the host starts off as leader,
-
-    private Timer electionTimer;
-    private long lastHeartbeatReceived = System.currentTimeMillis();
-
-
-    /**
-     * In RAFT typical, you send a heartbeat every x ms.
-     * In our modified RAFT, you request a heartbeat and receive it.
-     */
-    public void requestHeartbeat() throws IOException {
-        byte[] requestHeartbeat = Packet.createAckPacket(Packet.Opcode.HEARTBEAT, 0);
-    }
-
-    /**
-     * AppendEntries RPCs - these are known as heartbeats in the RAFT protocol.
-     * It is used to let the followers know that the leader is still alive.
-     *
-     * @throws IOException - if an I/O error occurs (should never occur)
-     */
-    public void sendHeartbeats() throws IOException {
-        // fail condition
-        if (raftState == RaftState.FOLLOWER ) {
-            // maybe reset the timer too?
-            return;
-        }
-
-        byte[] heartbeat = Packet.createAckPacket(Packet.Opcode.HEARTBEAT, currentTerm);
-        for (Player players : gameState.getPlayers().values()) {
-            DatagramPacket heartbeatPacket = new DatagramPacket(heartbeat, heartbeat.length, players.getAddress(), players.getPort());
-            client_socket.send(heartbeatPacket);
-        }
-    }
-
-    /**
-     * start the timer to determine if any host has disconnected;
-     * sets the condition for when elections should be held
-     *
-     * How does it work?
-     * 1. You cancel a timer that may have existed before. (This means that we received the heartbeat)
-     * 2. You create a timer that tells it to hold an election, if the heartbeat times out.
-     * 3. If timer doesn't go off, we repeat 1-2 forever.
-     * 4. If timer goes off, then we need a new election to elect a new leader. (handleElectionTimeout)
-     */
-    private void startRaftTimer() {
-        if (electionTimer != null) {
-            electionTimer.cancel();
-        }
-
-        electionTimer = new Timer(true);
-
-        // Schedule the timer to run repeatedly to check for heartbeat
-        electionTimer.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                long currentTime = System.currentTimeMillis();
-
-                // Follower checks for heartbeat timeout
-                if (raftState == RaftState.FOLLOWER) {
-                    try {
-                        requestHeartbeat();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-
-                    // Check if enough time has passed without a heartbeat
-                    // we need to implement updating this when we receive a heartbeat, which should be added to the main switch-case
-                    if (currentTime - lastHeartbeatReceived > electionTimeoutMS) {
-                        handleElectionTimeout();
-                    }
-                }
-            }
-        }, 0, 500); // Check every 500ms; tune as needed
-    }
-
-
-    /**
-     * A helper class for creating a new election.
-     * It makes sure that the leader is not creating a new election.
-     */
-    private void handleElectionTimeout() {
-        if (raftState != RaftState.LEADER) {
-            System.out.println("Election timeout occurred. Starting new election.");
-            holdRAFTElection(); // Transition to Candidate and start election
-        }
-    }
-
-    /**
-     * Finally, after startRaftTimer runs out, and handleElectionTimeout succeeds, we start a new election.
-     * 1. Change state from Follower to Candidate.
-     * 2. Increase the term.
-     * 3. Vote for yourself.
-     * 4. draw the rest of the owl
-     *
-     */
-    public void holdRAFTElection() {
-        raftState = RaftState.CANDIDATE;
-        currentTerm++;
-        vote = this.id;
-        System.out.println("Node " + id + " starting election for term " + currentTerm);
     }
 
 }
