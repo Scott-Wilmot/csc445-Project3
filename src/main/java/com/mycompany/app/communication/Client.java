@@ -16,16 +16,10 @@ public class Client {
 
     DatagramSocket client_socket;
     GameState gameState;
-    int id; // id should have ranges of 0-3?
+    int id;
 
     static int PORT = 26880;
     static String HOST = "129.3.20.24";
-
-
-    public static void main(String[] args) throws IOException {
-        Client c = new Client();
-        c.connect(HOST, PORT);
-    }
 
     public Client() throws SocketException {
         client_socket = new DatagramSocket(0);
@@ -33,11 +27,19 @@ public class Client {
     }
 
     /**
+     * Test Method for Client Instance
+     * @param args program args
+     */
+    public static void main(String[] args) throws IOException {
+        Client c = new Client();
+        c.connect(HOST, PORT);
+    }
+
+    /**
      * Connects to the host of a game and receives a unique id from the host upon successful connection
      *
-     * @param ip
-     * @param port
-     * @throws SocketException
+     * @param ip - the ip address of the host
+     * @param port - the port of the host
      */
     public void connect(String ip, int port) throws IOException {
         byte[] msg = Packet.createJoinPacket((short) 0, (short) 0);
@@ -47,9 +49,13 @@ public class Client {
         client_socket.receive(packet);
 
         Packet data = Packet.processJoinPacket(packet.getData());
-        id = data.id; // Yippeeeeeee should be binded and connected now
+        id = data.id;
     }
 
+    /**
+     * Sends the current game state to the client via UDP Packets
+     * (Packet representation - opcode, block num and data)
+     */
     public void send_update() throws IOException {
         Packet[] packets = Packet.createGameStatePackets(gameState);
         DatagramPacket send_buf;
@@ -79,7 +85,7 @@ public class Client {
     }
 
     /**
-     * Receives GameState packets, reorders them, deserializes them and updates self GameState field to received GameState
+     *  Receives GameState packets, reorders them, deserializes them and updates self GameState field to received GameState
      */
     public void receive_update() throws IOException, ClassNotFoundException {
         HashMap<Short, byte[]> map = new HashMap<>();
@@ -112,7 +118,9 @@ public class Client {
         gameState = Packet.processGameStatePackets(map);
     }
 
-    // main loop logic where we determine where everything goes
+    /**
+     *  Wait to get data from a datagram socket
+     */
     public void waiting() throws IOException {
         System.out.println("Waiting...");
         while (true){
@@ -129,7 +137,6 @@ public class Client {
      * RAFT IMPLEMENTATION
      */
     int currentTerm = 1;
-
     // how long it should take before a new election is started
     int electionTimeoutMS = 3000;
     // how often the leader should send their heartbeat

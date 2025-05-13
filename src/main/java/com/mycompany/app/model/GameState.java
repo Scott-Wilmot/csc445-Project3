@@ -24,9 +24,6 @@ public class GameState implements Serializable {
     private static final int NUM_CARDS_DEALT = 7;
     private static final int MAX_PLAYERS = 4;
 
-    /**
-     *
-     */
     public GameState() {
         this.playerCount = 0;
         currentTurn = 0;
@@ -40,12 +37,10 @@ public class GameState implements Serializable {
     }
 
     /**
-     * Creating a deck of all the possible cards.
-     * 10 shapes × 7 values = 70 cards (normal)
-     * Power Card = 4 x (+4 power cards) and one Wild Card
+     * Prepare cards for the game start
+     * <p>
+     * Create possible combinations of cards as defined in the game rules
      * </p>
-     *
-     * @modifies deck so that it contains 180 cards in random order
      */
     private void initializeDeck() {
         ArrayList<Card> cards = new ArrayList<>();
@@ -68,7 +63,12 @@ public class GameState implements Serializable {
     }
 
     /**
-     * Increment player count to account for a newly joined player. If max player count is already reached (4 players) return an exception
+     * Adds a player to the game if the maximum player limit has not been reached
+     * and the player ID is not yet registered.
+     *
+     * @param playerId playerId
+     * @param player   the Player object
+     * @return true if the player was successfully added, false otherwise
      */
     public boolean addPlayer(int playerId, Player player) {
         if (playerCount < MAX_PLAYERS) {
@@ -86,7 +86,7 @@ public class GameState implements Serializable {
     }
 
     /**
-     * Remove player from the game. Decrements playerCount by 1.
+     * Remove the player from the game. Decrements playerCount by 1.
      * A player may leave at any point in the game. In all cases, this method's behavior will not change.
      *
      * @param playerId - the player exiting the game
@@ -102,17 +102,12 @@ public class GameState implements Serializable {
      */
     public void startGame() {
         dealDeck();
-        // TODO: error handling: what if the first card is a +2
-        // todo: complete placing first before moving forward with this
         discardPile.add(deck.removeFirst());
-
-        // start the game with a random player
         currentTurn = ThreadLocalRandom.current().nextInt(playerCount);
     }
 
     /**
      * Determine the next player's turn.
-     * Normally, it would increment the player turn by one and repeat in a cycle.
      * If a reverse card has been played, then it decrements the player turn and repeats in a cycle.
      */
     public void nextTurn() {
@@ -123,14 +118,6 @@ public class GameState implements Serializable {
             currentTurn = (currentTurn + 1) % playerCount;
         }
         initializeTurn();
-    }
-
-    public int getCurrentTurn() {
-        return currentTurn;
-    }
-
-    public Player getCurrentPlayer() {
-        return players.get(currentTurn);
     }
 
     /**
@@ -323,34 +310,21 @@ public class GameState implements Serializable {
     /**
      * Process everything before the start of a player's turn.
      */
-    // TODO: add +2 stacking. currently, you can't stack.
-    // todo: end turn bug where it doesn't end turn
     public void initializeTurn() {
-        // 1: pick up cards
         if (stackActive) {
-            // ask the user if they want to place a +2 if they have it in thier hand
-            // if they say yes, place it and end turn
-            // if not, pick up cards and end turn.
             if (players.get(currentTurn).hasDrawCard(discardPile.peekLast())) {
                 System.out.println("has valid card");
-                // give the player a choice to stack card
-                // give the player a choice to not stack card
-                // end turn;
             }
             drawCard(cardStackCounter);
             stackActive = false;
-            // enable skip for the next turn so their turn ends
             skipActive = true;
             cardStackCounter = 0;
             endTurn();
         } else if (skipActive) {
-            // 2: skip cards
-            // INSTEAD OF HAVING A SKIP VALUE, LET'S JUST SAY "THEY HAVE PLAYED THEIR TURN"
             players.get(currentTurn).hasPlayedCard(true);
             skipActive = false;
             endTurn();
         }
-        // resetting parameters
         players.get(currentTurn).hasDrawnCard(false);
         players.get(currentTurn).hasPlayedCard(false);
     }
@@ -360,8 +334,16 @@ public class GameState implements Serializable {
         discardPile = new ArrayDeque<>();
     }
 
+    // Helper Methods
 
-    // TESTING
+    public int getCurrentTurn() {
+        return currentTurn;
+    }
+
+    public Player getCurrentPlayer() {
+        return players.get(currentTurn);
+    }
+
     public Deque<Card> getDeck() {
         return deck;
     }
@@ -378,6 +360,12 @@ public class GameState implements Serializable {
         return players;
     }
 
+
+    /**
+     * Test Main Method for Game State
+     * @param args
+     * @throws UnknownHostException
+     */
     public static void main(String[] args) throws UnknownHostException {
         GameState game = new GameState();
         System.out.println(game.getDeck().size());
