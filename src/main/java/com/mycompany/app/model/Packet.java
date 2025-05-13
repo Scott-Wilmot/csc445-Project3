@@ -27,6 +27,9 @@ public class Packet {
         START,
         SEND_GAME_STATE,
         HEARTBEAT,
+        RECONNECT,
+        GAME_OVER,
+        VOTE_REQUEST
     }
 
     /**
