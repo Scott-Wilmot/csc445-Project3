@@ -14,6 +14,9 @@ public class CardController {
 
     private List<Card> userCards;
 
+    /**
+     *
+     */
     public void prepareCards() {
         File dir = new File(System.getProperty("user.dir") + "/src/main/resources/cardImages");
 

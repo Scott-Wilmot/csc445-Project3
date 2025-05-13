@@ -3,7 +3,7 @@ package com.mycompany.app.ui.uiController;
 import com.mycompany.app.communication.Client;
 import com.mycompany.app.communication.Host;
 import com.mycompany.app.ui.MainApp;
-import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -16,9 +16,9 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.net.SocketException;
 import java.net.URL;
 import java.util.Objects;
+
 
 public class MainController {
 
@@ -46,34 +46,55 @@ public class MainController {
         this.mainApp = mainApp;
     }
 
+    /**
+     * triggers joinRoomButton (onAction)
+     *
+     * @param event default action provided by javafx
+     */
     @FXML
     private void handleJoinRoomClick(ActionEvent event) {
         String ip = joinRoomUsername.getText();
         int port = Integer.parseInt(joinRoomCode.getText());
+
         if (validateInputs(ip, String.valueOf(port))) {
 //            loadRoomScene(event, ip, String.valueOf(port), "Uno - Joined Room");
             joinRoomButton.setDisable(true);
 
-            new Thread(() -> {
-                try {
-                    Client client = mainApp.initClient();
-                    client.connect(ip, port); // make connect a boolean to indicate a success or failure to then handle if the button turns back on or not
-                    System.out.println("connected");
-                    return;
-                } catch (Exception e) {
-                    joinRoomButton.setDisable(false);
+            Task task = new Task() {
+                @Override
+                protected Boolean call() throws Exception {
+                    try {
+                        Client client = mainApp.initClient();
+                        return client.connect(ip, port);
+                    } catch (IOException e) {
+                        return false; // Default to failure on error
+                    }
                 }
-            }).start();
+            };
 
-            showAlert("Join Failure", "Failed to connect to Host");
+            task.setOnSucceeded(success -> {
+                boolean succeeded = (boolean) task.getValue();
+                if (succeeded) {
+                    System.out.println("Connection successful");
+                } else {
+                    joinRoomButton.setDisable(false);
+                    showAlert("Connection Error", "Failed to connect to host socket");
+                }
+            });
+
+            new Thread(task).start();
+
+            // Failure handling for FauLT TolERaNcE
+
         }
     }
 
+    /**
+     * triggers createRoomClick (onAction)
+     * @param event default action provided by javafx
+     */
     @FXML
     private void handleCreateRoomClick(ActionEvent event) throws IOException {
-        // This may be unnecessary if open_lobby() generates Ip and port automatically, localHost handling?
-//        String username = createRoomUsername.getText();
-//        String roomCode = createRoomCode.getText();
         createRoomButton.setDisable(true);
         Host host = mainApp.initHost();
         ip.setText(host.getLocalAddress());
@@ -94,18 +115,31 @@ public class MainController {
         System.out.println("Starting game");
     }
 
-    private boolean validateInputs(String username, String roomCode) {
-        if (username == null || username.trim().isEmpty()) {
-            showAlert("Missing Username", "Please enter your name before continuing.");
+    /**
+     * Validate the input for the client
+     *
+     * @param ip   the ip address of the host
+     * @param port the port of the host
+     * @return true if all checks passes, else false
+     */
+    private boolean validateInputs(String ip, String port) {
+        if (ip == null || ip.trim().isEmpty()) {
+            showAlert("Missing ip", "Please enter ip before continuing.");
             return false;
         }
-        if (roomCode == null || roomCode.trim().isEmpty()) {
-            showAlert("Missing Room Code", "Please enter a room code before continuing.");
+        if (port == null || port.trim().isEmpty()) {
+            showAlert("Missing port", "Please enter a port before continuing.");
             return false;
         }
         return true;
     }
 
+    /**
+     * Displays a warning alert dialog with the given title and message. <br/>
+     * Primarily used by {@link #validateInputs(String, String)}
+     * @param title
+     * @param message
+     */
     private void showAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setTitle(title);
@@ -114,6 +148,10 @@ public class MainController {
         alert.showAndWait();
     }
 
+    /**
+     * Loads the room scene by navigating to the RoomView.fxml and setting up the
+     * required parameters such as username and room code.
+     */
     private void loadRoomScene(ActionEvent event, String username, String roomCode, String title) {
         try {
             URL fxmlLocation = getClass().getResource("/fxmlViews/RoomView.fxml");

@@ -22,19 +22,30 @@ public class Host {
     String HOST = "0.0.0.0";
 
     public Host(String host_name) throws IOException {
-        host_channel = initialize_socket(HOST);
+        host_channel = initialize_socket(host_name);
         game_started = false;
         clients = new HashMap<>();
     }
 
+    /**
+     * Test Method for Host Instance
+     *
+     * @param args program args
+     */
     public static void main(String[] args) throws IOException, InterruptedException {
         Host host = new Host(InetAddress.getLocalHost().getHostName());
         host.open_lobby();
     }
 
+    /**
+     * Initializes a non-blocking DatagramChannel bound to the given hostname.
+     *
+     * @param host_name string representation of host name for Host Instance
+     * @return A DatagramChannel instance that is bound to Host.
+     */
     DatagramChannel initialize_socket(String host_name) throws IOException {
         InetSocketAddress addr;
-        if (host_name == "localhost") {
+        if (host_name.equals("localhost")) {
             addr = new InetSocketAddress(InetAddress.getByName(host_name), 0);
         } else {
             addr = new InetSocketAddress(InetAddress.getLocalHost().getHostName(), 0);
@@ -47,11 +58,9 @@ public class Host {
     }
 
     /**
-     * Initializes the lobby for clients to join the game, registers clients in the host code so the host can process future messages and relate them to a client,
-     * sends a unique id to each client upon receiving a join request
-     * Kinda ignores the join message right now, should in the future check that the OpCode is the join OpCode. Received data is meaningless and can be ignored
-     * @throws IOException
-     * @throws InterruptedException
+     * Opens the game lobby, allowing clients to join before the game starts.
+     * Registers each client with a unique ID and responds to join requests with an acknowledgment packet.
+     * Currently accepts any incoming message as a join request (OpCode check is a TODO).
      */
     public void open_lobby() throws IOException, InterruptedException {
         System.out.println("local_addr: " + host_channel.getLocalAddress());
@@ -86,7 +95,10 @@ public class Host {
     }
 
     /**
-     * For each packet GameState has been split into, send the packet to each client socket
+     * Sends the current game state to all connected clients.
+     * <p>
+     * The game state is split into packets, each sent to every client.
+     * Retries sending if no acknowledgment is received (simple resend loop).
      */
     public void update_clients() throws IOException, InterruptedException {
         Packet[] packets = Packet.createGameStatePackets(gameState);
@@ -119,12 +131,25 @@ public class Host {
             }
         }
     }
+
+    /**
+     * Retrieves the local IP address bound to the host's DatagramChannel.
+     *
+     * @return The local IP address as a string.
+     * @throws IOException if an I/O error occurs while retrieving the address.
+     */
     public String getLocalAddress() throws IOException {
         return ((InetSocketAddress) host_channel.getLocalAddress()).getAddress().getHostAddress();
     }
 
+    /**
+     * Retrieves the local IP port bound to the host's DatagramChannel.
+     *
+     * @return The local IP port as a string.
+     * @throws IOException if an I/O error occurs while retrieving the port.
+     */
     public String getLocalPort() throws IOException {
-        int port =  ((InetSocketAddress) host_channel.getLocalAddress()).getPort();
+        int port = ((InetSocketAddress) host_channel.getLocalAddress()).getPort();
         return String.valueOf(port);
     }
 }
