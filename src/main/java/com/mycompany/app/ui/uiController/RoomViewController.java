@@ -111,17 +111,8 @@ public class RoomViewController {
     }
 
     /**
-     * Adds a new card to the user card group and initializes its interaction behavior.
-     * <p>
-     * This method generates a random card image, creates a new {@code ImageView} for
-     * displaying the card, and configures its behavior for interactions such as mouse
-     * clicks and hover effects. When the card is clicked, it triggers the discard action.
-     * Mouse hover actions move the card vertically for visual feedback.
-     * <p>
-     * The card is added to the {@code userCardsGroup}, and the layout of the user's cards
-     * is reorganized after adding the new card.
-     * <p>
-     * The method catches and logs any exceptions that occur during the process.
+     * Adds a randomly generated card to the user group with click and hover behavior.
+     * Triggers discard on click and reposition cards. Logs any exceptions.
      */
     private void addNewCard(String cardImageLocation) {
         try {

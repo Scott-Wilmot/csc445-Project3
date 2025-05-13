@@ -3,10 +3,10 @@ package com.mycompany.app.model;
 import java.io.Serializable;
 
 /**
- * The playing card used for the game, 445.
+ * Record class for card representation
  *
- * @param shape - one of eight possible shapes (STAR, MOON, SUN, HEART, SKIP, REVERSE, DRAW_TWO, WILD)
- * @param value - one of ten possible value (    PAPRIKA, VALENCIA, JAFFA, KOROMIKO, SALOMIE, BUTTERFLY_BUSH, PARADISO, TRADEWIND, MOSS_GREEN, SANDWISP)
+ * @param shape - one of 9 possible shapes (refer to Shape Class)
+ * @param value - one of 11 possible values (refer to Value Class)
  */
 public record Card(Shape shape, Value value) implements Serializable {
     @Override

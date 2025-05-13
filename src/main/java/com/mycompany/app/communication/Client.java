@@ -2,11 +2,15 @@ package com.mycompany.app.communication;
 
 import com.mycompany.app.model.GameState;
 import com.mycompany.app.model.Packet;
+import com.mycompany.app.model.Player;
 
 import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.*;
 
 public class Client {
 
@@ -30,9 +34,8 @@ public class Client {
     /**
      * Connects to the host of a game and receives a unique id from the host upon successful connection
      *
-     * @param ip
-     * @param port
-     * @throws SocketException
+     * @param ip - the ip address of the host
+     * @param port - the port of the host
      */
     public boolean connect(String ip, int port) throws IOException {
         byte[] msg = Packet.createJoinPacket((short) 0, (short) 0);
@@ -52,20 +55,13 @@ public class Client {
         } finally {
             client_socket.setSoTimeout(0);
         }
+
     }
 
-    // do we need heartbeats to let the server know the client is still alive?
-    public void waiting() throws IOException {
-        System.out.println("Waiting...");
-        while (true){
-            byte[] msg = new byte[1024];
-            DatagramPacket packet = new DatagramPacket(msg, msg.length);
-
-            client_socket.receive(packet);
-            System.out.println("Data Received.");
-        }
-    }
-
+    /**
+     * Sends the current game state to the client via UDP Packets
+     * (Packet representation - opcode, block num and data)
+     */
     public void send_update() throws IOException {
         Packet[] packets = Packet.createGameStatePackets(gameState);
         DatagramPacket send_buf;
@@ -126,6 +122,67 @@ public class Client {
 
         // Now Reconstruct and update GameState
         gameState = Packet.processGameStatePackets(map);
+    }
+
+    /**
+     *  Wait to get data from a datagram socket
+     */
+    public void waiting() throws IOException {
+        System.out.println("Waiting...");
+        while (true){
+            byte[] msg = new byte[1024];
+            DatagramPacket packet = new DatagramPacket(msg, msg.length);
+
+            client_socket.receive(packet);
+            System.out.println("Data Received.");
+        }
+    }
+
+
+    /**
+     * RAFT IMPLEMENTATION
+     */
+    int currentTerm = 1;
+    // how long it should take before a new election is started
+    int electionTimeoutMS = 3000;
+    // how often the leader should send their heartbeat
+    int heartbeatTimeoutMS = 1400;
+    // who the client voted for (during the election)
+    int vote = -1;
+
+    // the states that these clients can be in
+    enum RaftState {
+        LEADER,
+        CANDIDATE,
+        FOLLOWER
+    }
+    RaftState raftState = RaftState.FOLLOWER; // there are 3 states; follower, candidate, leader
+    // initially, the host starts off as leader,
+
+    private Timer electionTimer;
+    private long lastHeartbeatReceived = System.currentTimeMillis();
+
+
+    /**
+     * In RAFT typical, you send a heartbeat every x ms.
+     * In our modified RAFT, you request a heartbeat and receive it.
+     */
+    public void requestHeartbeat() throws IOException {
+        byte[] requestHeartbeat = Packet.createAckPacket(Packet.Opcode.HEARTBEAT, 0);
+    }
+
+    /**
+     * AppendEntries RPCs - these are known as heartbeats in the RAFT protocol.
+     * It is used to let the followers know that the leader is still alive.
+     *
+     * @throws IOException - if an I/O error occurs (should never occur)
+     */
+    public void sendHeartbeats() throws IOException {
+        // fail condition
+        if (raftState == RaftState.FOLLOWER ) {
+            // maybe reset the timer too?
+            return;
+        }
 
     }
 

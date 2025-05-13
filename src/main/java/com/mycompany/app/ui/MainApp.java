@@ -19,9 +19,12 @@ public class MainApp extends Application {
     private Host host;
     private Client client;
 
-    public MainApp() throws IOException {
-    }
-
+    /**
+     * Runs when javafx is initialized
+     * Defaults to MainView.fxml for a scene
+     * @param primaryStage initial stage provided
+     * @throws Exception handled by FXML Loader
+     */
     @Override
     public void start(Stage primaryStage) throws Exception {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxmlViews/MainView.fxml"));
@@ -32,19 +35,23 @@ public class MainApp extends Application {
 
         Scene scene = new Scene(root);
         primaryStage.setScene(scene);
-        primaryStage.setTitle("Uno of soney");
+        primaryStage.setTitle("445 GAME");
         primaryStage.show();
     }
 
+    /**
+     * creates the host instance
+     * @return host instance
+     */
     public Host initHost() throws IOException {
         host = new Host("localhost");
         return host;
     }
 
-    public Host getHost() {
-        return host;
-    }
-
+    /**
+     * creates the client instance
+     * @return client instance
+     */
     public Client initClient() throws SocketException {
         client = new Client();
         return client;

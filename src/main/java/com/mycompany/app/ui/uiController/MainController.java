@@ -46,6 +46,11 @@ public class MainController {
         this.mainApp = mainApp;
     }
 
+    /**
+     * triggers joinRoomButton (onAction)
+     *
+     * @param event default action provided by javafx
+     */
     @FXML
     private void handleJoinRoomClick(ActionEvent event) {
         String ip = joinRoomUsername.getText();
@@ -84,11 +89,12 @@ public class MainController {
         }
     }
 
+    /**
+     * triggers createRoomClick (onAction)
+     * @param event default action provided by javafx
+     */
     @FXML
     private void handleCreateRoomClick(ActionEvent event) throws IOException {
-        // This may be unnecessary if open_lobby() generates Ip and port automatically, localHost handling?
-//        String username = createRoomUsername.getText();
-//        String roomCode = createRoomCode.getText();
         createRoomButton.setDisable(true);
         Host host = mainApp.initHost();
         ip.setText(host.getLocalAddress());
@@ -109,18 +115,31 @@ public class MainController {
         System.out.println("Starting game");
     }
 
-    private boolean validateInputs(String username, String roomCode) {
-        if (username == null || username.trim().isEmpty()) {
-            showAlert("Missing Username", "Please enter your name before continuing.");
+    /**
+     * Validate the input for the client
+     *
+     * @param ip   the ip address of the host
+     * @param port the port of the host
+     * @return true if all checks passes, else false
+     */
+    private boolean validateInputs(String ip, String port) {
+        if (ip == null || ip.trim().isEmpty()) {
+            showAlert("Missing ip", "Please enter ip before continuing.");
             return false;
         }
-        if (roomCode == null || roomCode.trim().isEmpty()) {
-            showAlert("Missing Room Code", "Please enter a room code before continuing.");
+        if (port == null || port.trim().isEmpty()) {
+            showAlert("Missing port", "Please enter a port before continuing.");
             return false;
         }
         return true;
     }
 
+    /**
+     * Displays a warning alert dialog with the given title and message. <br/>
+     * Primarily used by {@link #validateInputs(String, String)}
+     * @param title
+     * @param message
+     */
     private void showAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setTitle(title);
@@ -129,6 +148,10 @@ public class MainController {
         alert.showAndWait();
     }
 
+    /**
+     * Loads the room scene by navigating to the RoomView.fxml and setting up the
+     * required parameters such as username and room code.
+     */
     private void loadRoomScene(ActionEvent event, String username, String roomCode, String title) {
         try {
             URL fxmlLocation = getClass().getResource("/fxmlViews/RoomView.fxml");
