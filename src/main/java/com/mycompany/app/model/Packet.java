@@ -19,6 +19,12 @@ public class Packet {
     public short block_num;
     public byte[] data;
 
+    static final int PACKET_SIZE = 1024;
+    static final int OPCODE_SIZE = 2;
+    static final int BLOCKNUM_SIZE = 4;
+    static final int ENCRYPTION_SIZE = 16;
+
+
     /**
      * Used to reference what the type of data the client is attempting to send
      */
@@ -29,7 +35,9 @@ public class Packet {
         HEARTBEAT,
         RECONNECT,
         GAME_OVER,
-        VOTE_REQUEST
+        VOTE_REQUEST,
+        VOTE_GRANTED,
+        VOTE_DENIED
     }
 
     /**
@@ -173,18 +181,35 @@ public class Packet {
      * @return a byte[] packet with the opcode and blockNum
      * @throws IOException - if an I/O error occurs (should never occur)
      */
-    public static byte[] createAckPacket(Opcode opcode, int specialNum) throws IOException {
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
-        // Write the 2-byte opcode
-        output.write(new byte[]{0x00, (byte) opcode.ordinal()});
+    public static byte[] createAckPacket(Opcode opcode, int specialNum) {
+        ByteBuffer buffer = ByteBuffer.allocate(OPCODE_SIZE + BLOCKNUM_SIZE);
+        buffer.putShort((short) opcode.ordinal());
+        buffer.putInt(specialNum);
+        return buffer.array();
+    }
 
-        // Write the 4-byte blockNum (big-endian order)
-        output.write((byte) (specialNum >> 24));
-        output.write((byte) (specialNum >> 16));
-        output.write((byte) (specialNum >> 8));
-        output.write((byte) specialNum);
 
-        return output.toByteArray();
+    /**
+     * Creates a vote request packet for initiating a RAFT election.
+     * This packet is sent by a candidate to all other nodes to request their vote.
+     * <pre>
+     * +------------+-----------+--------------+
+     * |  OP-CODE   |   TERM    | CANDIDATE ID |
+     * +------------+-----------+--------------+
+     * | [2 bytes]  | [2 bytes] |  [4 bytes]   |
+     * +------------+-----------+--------------+
+     * </pre>
+     *
+     * @param term - the current term of the candidate requesting the vote
+     * @param candidateId - the unique ID of the candidate requesting the vote
+     * @return a byte array representing the vote request packet
+     */
+    public static byte[] createVoteRequest(short term, int candidateId) {
+        ByteBuffer buffer = ByteBuffer.allocate(8); // Corrected to 8 bytes (2 + 2 + 4)
+        buffer.putShort((short) Opcode.VOTE_REQUEST.ordinal());
+        buffer.putShort(term);
+        buffer.putInt(candidateId);
+        return buffer.array();
     }
 
     /**
@@ -196,21 +221,17 @@ public class Packet {
      * | [2 bytes]  | [4 bytes] |
      * +------------+-----------+
      * The block number is expected to be a 4-byte integer in big-endian order starting at offset 2.
+     * By doing buffer.getShort(), you discard the op-code and are able to retrieve the block number.
      *
      * @param packet - the byte array containing the acknowledgement packet
      * @return the extracted special number as an int
      */
-    static int getBlockNumFromAckPacket(byte[] packet) {
-        // Use bitwise shifts and the bitwise OR operator (|) to combine the bytes.
-        // The & 0xFF is important to treat each byte as an unsigned value before shifting,
-        // preventing sign extension issues with negative byte values in Java.
-        int blockNum = ((packet[2] & 0xFF) << 24) |
-                ((packet[3] & 0xFF) << 16) |
-                ((packet[4] & 0xFF) << 8)  |
-                (packet[5] & 0xFF);
-
-        return blockNum;
+    public static int getBlockNumFromAckPacket(byte[] packet) {
+        ByteBuffer buffer = ByteBuffer.wrap(packet);
+        buffer.getShort();
+        return buffer.getInt();
     }
+
 
     /**
      * Creates a byte[] that contains: op-code, block-number, and data.
@@ -230,30 +251,28 @@ public class Packet {
      * @return data byte[] packet used to send partitioned/whole Gamestate data.
      * @throws IOException - if an I/O error occurs (should never occur)
      */
-    static byte[] sendGamePacket(Opcode opcode, int blockNum, int encryptionKey, GameState state) throws IOException {
-        // Setup: Serializing state
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
-        ObjectOutputStream objectSerializer = new ObjectOutputStream(output);
-        objectSerializer.writeObject(state);
-        objectSerializer.flush();
-        byte[] stateBytes = output.toByteArray();
-        output.reset();
+    public static byte[] createGamePacket(Opcode opcode, int blockNum, int encryptionKey, GameState state) throws IOException {
+        // Serialize GameState
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(baos);
+        oos.writeObject(state);
+        oos.flush();
+        byte[] stateBytes = baos.toByteArray();
 
-        // Creating the packet
-        output.write(new byte[]{0x00, (byte) opcode.ordinal()});
-        output.write((byte) (blockNum >> 24));
-        output.write((byte) (blockNum >> 16));
-        output.write((byte) (blockNum >> 8));
-        output.write((byte) blockNum);
-        output.write(stateBytes);
+        ByteBuffer buffer = ByteBuffer.allocate(PACKET_SIZE);
+        buffer.putShort((short) opcode.ordinal());
+        buffer.putInt(blockNum);
+        buffer.put(new byte[ENCRYPTION_SIZE]);         // add encryption key in the future; for now, placeholder.
+        buffer.put(stateBytes);
 
-        return output.toByteArray();
+        return buffer.array();
     }
+
 
 
     public static void main(String[] args) throws IOException {
         GameState gameState = new GameState();
-        byte[] data = sendGamePacket(Opcode.JOIN, 01, 01, gameState);
+        byte[] data = createGamePacket(Opcode.JOIN, 01, 01, gameState);
         gameState.addPlayer(1, new Player(InetAddress.getByName("localhost"), 9090));
         gameState.addPlayer(2, new Player(InetAddress.getByName("localhost"), 9090));
         gameState.addPlayer(3, new Player(InetAddress.getByName("localhost"), 9090));

@@ -268,7 +268,7 @@ public class Client {
         int majority = (gameState.getPlayers().size() / 2) + 1;
         System.out.println("Node " + id + " starting election for term " + currentTerm);
 
-//        byte[] voteRequest = Packet.createRequestVotePacket((short) currentTerm, (short) id);
+        byte[] voteRequest = Packet.createVoteRequest((short) currentTerm, (short) id);
     }
 
 }
