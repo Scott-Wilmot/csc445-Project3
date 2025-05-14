@@ -134,16 +134,6 @@ public class Client {
             client_socket.receive(packet);
 
             Packet.Opcode packetOpcode = Packet.extractOpcode(msg);
-            JOIN,
-                    START,
-                    SEND_GAME_STATE,
-                    HEARTBEAT,
-                    RECONNECT,
-                    GAME_OVER,
-                    VOTE_REQUEST,
-                    VOTE_GRANTED,
-                    VOTE_DENIED
-
             switch (packetOpcode) {
                 case JOIN:
                     System.out.println("Join");
@@ -174,7 +164,6 @@ public class Client {
                     System.out.println("Vote Denied");
                     break;
             }
-
             System.out.println("Data Received.");
         }
     }
@@ -228,11 +217,11 @@ public class Client {
     private long lastHeartbeatReceived = System.currentTimeMillis();
 
     /**
-     * In RAFT typical, you send a heartbeat every x ms.
+     * In RAFT Typical, you send a heartbeat every x ms.
      * In our modified RAFT, you request a heartbeat and receive it.
      */
     public void requestHeartbeat() throws IOException {
-        byte[] requestHeartbeat = Packet.createAckPacket(Packet.Opcode.HEARTBEAT, 0);
+        byte[] requestHeartbeat = Packet.createAckPacket(Packet.Opcode.HEARTBEAT, currentTerm);
     }
 
     /**
