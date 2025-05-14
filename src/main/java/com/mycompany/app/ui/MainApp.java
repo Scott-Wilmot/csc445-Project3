@@ -2,6 +2,7 @@ package com.mycompany.app.ui;
 
 import com.mycompany.app.communication.Client;
 import com.mycompany.app.communication.Host;
+import com.mycompany.app.communication.User;
 import com.mycompany.app.ui.uiController.MainController;
 import com.mycompany.app.ui.uiController.RoomViewController;
 import javafx.application.Application;
@@ -17,8 +18,7 @@ import java.util.Objects;
 
 public class MainApp extends Application {
 
-    private Host host;
-    private Client client;
+    private User user;
 
     private RoomViewController roomController;
     private Stage primaryStage;
@@ -51,6 +51,7 @@ public class MainApp extends Application {
         Parent roomRoot = roomLoader.load();
         RoomViewController roomController = roomLoader.getController();
         roomController.setMainApp(this);
+        this.roomController = roomController;
 
         roomController.setRoomCode(ip);
         roomController.setUsername(port);
@@ -65,26 +66,26 @@ public class MainApp extends Application {
      * creates the host instance
      * @return host instance
      */
-    public Host initHost() throws IOException {
-        host = new Host("localhost");
-        return host;
-    }
-
-    public Host getHost() {
-        return host;
+    public User initHost() throws IOException {
+        user = new Host("localhost");
+        return user;
     }
 
     /**
      * creates the client instance
      * @return client instance
      */
-    public Client initClient() throws SocketException {
-        client = new Client();
-        return client;
+    public User initClient() throws SocketException {
+        user = new Client();
+        return user;
     }
 
-    public Client getClient() {
-        return client;
+    public User getUser() {
+        return user;
+    }
+
+    public RoomViewController getRoomController() {
+        return roomController;
     }
 
     public static void main(String[] args) throws IOException {

@@ -72,6 +72,7 @@ public class Packet {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
              ObjectOutputStream oos = new ObjectOutputStream(bos)) {
             oos.writeObject(gs);
+            System.out.println(bos.toByteArray().length);
             return bos.toByteArray();
         }
     }
@@ -123,29 +124,31 @@ public class Packet {
      * @param gs
      * @return
      */
-    public static Packet[] createGameStatePackets(GameState gs) throws IOException {
+    public static ArrayList<Packet> createGameStatePackets(GameState gs) throws IOException {
         ArrayList<Packet> packets = new ArrayList<>();
         ByteBuffer ser_gs = ByteBuffer.wrap(serialize(gs));
         int data_len = 1020; // Magic number is packet size (1024) minus the opCode and BlockNum sizes
+        byte[] data;
 
         short block_num = 0;
         while (true) {
             int remaining_bytes = ser_gs.remaining();
 
             if (remaining_bytes >= data_len) {
-                byte[] data = new byte[data_len];
+                data = new byte[data_len];
                 ser_gs.get(data);
                 packets.add(new Packet((short) 1, block_num, data));
                 block_num++;
             } else { // Not enough data for full packet
-                byte[] data = new byte[remaining_bytes];
+                data = new byte[remaining_bytes];
                 ser_gs.get(data);
                 packets.add(new Packet((short) 1, block_num, data));
                 break;
             }
+            System.out.println(data.length);
         }
 
-        return (Packet[]) packets.toArray();
+        return packets;
     }
 
     public static GameState processGameStatePackets(HashMap<Short, byte[]> map) throws IOException, ClassNotFoundException {
@@ -155,6 +158,7 @@ public class Packet {
         Set<Short> set = map.keySet();
         List<Short> keys = new ArrayList<>(set);
         Collections.sort(keys);
+        System.out.println(Arrays.toString(keys.toArray()));
 
         // Place, in order, the data into a BOS
         for (Short key : keys) {

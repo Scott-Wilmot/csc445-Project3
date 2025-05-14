@@ -2,6 +2,7 @@ package com.mycompany.app.ui.uiController;
 
 import com.mycompany.app.communication.Client;
 import com.mycompany.app.communication.Host;
+import com.mycompany.app.communication.User;
 import com.mycompany.app.ui.MainApp;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
@@ -63,7 +64,7 @@ public class MainController {
                 @Override
                 protected Boolean call() throws Exception {
                     try {
-                        Client client = mainApp.initClient();
+                        Client client = (Client) mainApp.initClient();
                         return client.connect(ip, port);
                     } catch (IOException e) {
                         return false; // Default to failure on error
@@ -76,7 +77,7 @@ public class MainController {
                 if (succeeded) {
                     System.out.println("Connection successful");
                     try {
-                        mainApp.getClient().listen_for_start();
+                        ((Client) mainApp.getUser()).listen_for_start();
                         loadRoomScene(event, String.valueOf(ip), String.valueOf(port), "Uno - Joined Room");
                     } catch (IOException e) {
                         throw new RuntimeException(e);
@@ -101,7 +102,7 @@ public class MainController {
     @FXML
     private void handleCreateRoomClick(ActionEvent event) throws IOException {
         createRoomButton.setDisable(true);
-        Host host = mainApp.initHost();
+        Host host = (Host) mainApp.initHost();
         ip.setText(host.getLocalAddress());
         port.setText(host.getLocalPort());
 
@@ -120,7 +121,7 @@ public class MainController {
         System.out.println("Starting game");
 
         new Thread(() -> {
-           Host host = mainApp.getHost();
+           Host host = (Host) mainApp.getUser();
             try {
                 host.send_start_alert();
             } catch (IOException e) {
@@ -177,19 +178,26 @@ public class MainController {
      */
     private void loadRoomScene(ActionEvent event, String ip, String port, String title) {
         try {
-//            URL fxmlLocation = getClass().getResource("/fxmlViews/RoomView.fxml");
-//            FXMLLoader roomLoader = new FXMLLoader(getClass().getResource("/fxmlViews/RoomView.fxml"));
-//            Parent root = roomLoader.load();
-//
-//            RoomViewController controller = roomLoader.getController();
-//            controller.setRoomCode(ip);
-//            controller.setUsername(port);
-//
-//            Stage stage = (Stage) ((Button) event.getSource()).getScene().getWindow();
-//            stage.setScene(new Scene(root));
-//            stage.setTitle(title);
+            // Initialize the roomViewController
             mainApp.roomInit(ip, port);
-        } catch (IOException e) {
+            // Now load card data
+            RoomViewController roomController = mainApp.getRoomController();
+            User user = mainApp.getUser();
+            if (user instanceof Client) {
+                System.out.println("user is Client");
+                // Get client instance and listen for incoming intiial gamestate
+                Client client = (Client) user;
+                // Receive gamestate here
+                client.receive_update();
+            } else if (user instanceof Host) {
+                System.out.println("user is Host");
+                // Send out initial gamestate
+                Host host = (Host) user;
+                // Send gamestate here
+                host.update_clients();
+            }
+            roomController.setUser(user);
+        } catch (IOException | ClassNotFoundException | InterruptedException e) {
             e.printStackTrace();
             showAlert("Loading Error", "Something went wrong while loading the room screen.");
         }

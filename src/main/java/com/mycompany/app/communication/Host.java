@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
 
-public class Host {
+public class Host implements User {
 
     DatagramChannel host_channel;
     GameState gameState;
@@ -134,7 +134,7 @@ public class Host {
      * Retries sending if no acknowledgment is received (simple resend loop).
      */
     public void update_clients() throws IOException, InterruptedException {
-        Packet[] packets = Packet.createGameStatePackets(gameState);
+        ArrayList<Packet> packets = Packet.createGameStatePackets(gameState);
 
         for (Packet packet : packets) {
             // Place packet information into a byte array
@@ -143,6 +143,7 @@ public class Host {
             buf.putShort(packet.opCode);
             buf.putShort(packet.block_num);
             buf.put(packet.data);
+            System.out.println(buf.array().length);
 
             // Now send byte array through the socket
             Set<Integer> keys = clients.keySet();

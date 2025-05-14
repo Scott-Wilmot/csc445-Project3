@@ -10,7 +10,7 @@ import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.*;
 
-public class Client {
+public class Client implements User {
 
     DatagramSocket client_socket;
     GameState gameState;
@@ -27,7 +27,6 @@ public class Client {
 
     public Client() throws SocketException {
         client_socket = new DatagramSocket(0);
-        gameState = new GameState();
     }
 
     /**
@@ -47,6 +46,7 @@ public class Client {
             client_socket.receive(packet);
             Packet data = Packet.processJoinPacket(packet.getData());
             id = data.id; // Yippeeeeeee should be binded and connected now
+            client_socket.connect(packet.getSocketAddress());
             return true;
         } catch (SocketTimeoutException t) {
             System.out.println("Timeout");
@@ -74,7 +74,7 @@ public class Client {
      * (Packet representation - opcode, block num and data)
      */
     public void send_update() throws IOException {
-        Packet[] packets = Packet.createGameStatePackets(gameState);
+        ArrayList<Packet> packets = Packet.createGameStatePackets(gameState);
         DatagramPacket send_buf;
 
         for (Packet packet : packets) {
@@ -112,7 +112,7 @@ public class Client {
         while (true) {
             client_socket.receive(packet);
 
-            ByteBuffer buf = ByteBuffer.allocate(1024); // Magic number yippeeeeee, jk fix this
+            ByteBuffer buf = ByteBuffer.allocate(packet_size); // Magic number yippeeeeee, jk fix this
             buf.put(packet.getData());
             buf.flip();
             short opCode = buf.getShort();
@@ -123,10 +123,12 @@ public class Client {
             map.put(block_num, data);
 
             // Now send a meaningless ACK
-            byte[] msg = "ACTG".getBytes();
-            packet = new DatagramPacket(msg, msg.length);
+            byte[] ack = "ACTG".getBytes();
+            DatagramPacket ackPacket = new DatagramPacket(ack, ack.length);
+            client_socket.send(ackPacket);
 
             if (packet.getLength() < packet_size) {
+                System.out.println(packet.getLength() + " < " + packet_size);
                 break; // The end of packets receiving, what if the ACK isn't successfully delivered?
             }
         }

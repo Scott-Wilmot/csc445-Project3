@@ -1,5 +1,8 @@
 package com.mycompany.app.ui.uiController;
 
+import com.mycompany.app.communication.Client;
+import com.mycompany.app.communication.Host;
+import com.mycompany.app.communication.User;
 import com.mycompany.app.model.Card;
 import com.mycompany.app.model.GameState;
 import com.mycompany.app.model.Player;
@@ -38,6 +41,7 @@ public class RoomViewController {
     @FXML
     Text currentPlayerId;
 
+    User user;
     GameState gameState;
     MainApp mainApp;
 
@@ -205,5 +209,8 @@ public class RoomViewController {
         this.username.setText(username);
     }
 
+    public void setUser(User user) {
+        this.user = user;
+    }
 
 }
