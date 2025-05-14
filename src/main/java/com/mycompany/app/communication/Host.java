@@ -95,6 +95,14 @@ public class Host {
     }
 
     /**
+     * Alerts all connected clients of the games start. Should send alerts and wait for an ACK from each client before starting game on hosts side.
+     * Needs to also communicate an initial gamestate that the host generates on its end -> this method initializes gamestate?
+     */
+    public void send_start_alert() {
+
+    }
+
+    /**
      * Sends the current game state to all connected clients.
      * <p>
      * The game state is split into packets, each sent to every client.
@@ -152,4 +160,9 @@ public class Host {
         int port = ((InetSocketAddress) host_channel.getLocalAddress()).getPort();
         return String.valueOf(port);
     }
+
+    public void startGame() {
+        game_started = true;
+    }
+
 }

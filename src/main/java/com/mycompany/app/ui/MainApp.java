@@ -3,6 +3,7 @@ package com.mycompany.app.ui;
 import com.mycompany.app.communication.Client;
 import com.mycompany.app.communication.Host;
 import com.mycompany.app.ui.uiController.MainController;
+import com.mycompany.app.ui.uiController.RoomViewController;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -19,21 +20,42 @@ public class MainApp extends Application {
     private Host host;
     private Client client;
 
+    private RoomViewController roomController;
+    private Stage primaryStage;
+
     /**
      * Runs when javafx is initialized
      * Defaults to MainView.fxml for a scene
-     * @param primaryStage initial stage provided
+     * @param stage initial stage provided
      * @throws Exception handled by FXML Loader
      */
     @Override
-    public void start(Stage primaryStage) throws Exception {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxmlViews/MainView.fxml"));
-        Parent root = loader.load();
+    public void start(Stage stage) throws Exception {
+        primaryStage = stage;
 
-        MainController controller = loader.getController();
-        controller.setMainApp(this);
+        // MainView screen initialization
+        FXMLLoader mainLoader = new FXMLLoader(getClass().getResource("/fxmlViews/MainView.fxml"));
+        Parent mainRoot = mainLoader.load();
+        MainController mainController = mainLoader.getController();
+        mainController.setMainApp(this);
 
-        Scene scene = new Scene(root);
+        Scene scene = new Scene(mainRoot);
+        primaryStage.setScene(scene);
+        primaryStage.setTitle("445 GAME");
+        primaryStage.show();
+    }
+
+    public void roomInit(String ip, String port) throws IOException {
+        // RoomView initialization
+        FXMLLoader roomLoader = new FXMLLoader(getClass().getResource("/fxmlViews/RoomView.fxml"));
+        Parent roomRoot = roomLoader.load();
+        RoomViewController roomController = roomLoader.getController();
+        roomController.setMainApp(this);
+
+        roomController.setRoomCode(ip);
+        roomController.setUsername(port);
+
+        Scene scene = new Scene(roomRoot);
         primaryStage.setScene(scene);
         primaryStage.setTitle("445 GAME");
         primaryStage.show();
@@ -45,6 +67,10 @@ public class MainApp extends Application {
      */
     public Host initHost() throws IOException {
         host = new Host("localhost");
+        return host;
+    }
+
+    public Host getHost() {
         return host;
     }
 
