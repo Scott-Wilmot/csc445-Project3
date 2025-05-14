@@ -83,6 +83,10 @@ public class MainApp extends Application {
         return client;
     }
 
+    public Client getClient() {
+        return client;
+    }
+
     public static void main(String[] args) throws IOException {
         launch(args);
     }

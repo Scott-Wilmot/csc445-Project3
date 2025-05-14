@@ -72,11 +72,6 @@
                 </executions>
                 <configuration>
                     <mainClass>com.mycompany.app.ui.MainApp</mainClass>
-                    <options>
-                        <option>--add-modules</option>
-                        <option>javafx.controls</option>
-                        <option>javafx.fxml</option>
-                    </options>
                 </configuration>
             </plugin>
 

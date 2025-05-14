@@ -58,6 +58,18 @@ public class Client {
     }
 
     /**
+     * Block the Client object from futher execution until a start message is received from the host
+     */
+    public void listen_for_start() throws IOException {
+        byte[] buf = new byte[2];
+        DatagramPacket packet = new DatagramPacket(buf, buf.length);
+
+        client_socket.receive(packet);
+        client_socket.send(packet);
+
+    }
+
+    /**
      * Sends the current game state to the client via UDP Packets
      * (Packet representation - opcode, block num and data)
      */
@@ -141,7 +153,7 @@ public class Client {
                 case START:
                     System.out.println("Start");
                     break;
-                case SEND_GAME_STATE:
+                case UPDATE:
                     System.out.println("Send Game State");
                     break;
                 case RECONNECT:

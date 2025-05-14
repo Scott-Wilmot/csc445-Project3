@@ -2,6 +2,7 @@ package com.mycompany.app.model;
 
 import java.io.Serializable;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -370,11 +371,12 @@ public class GameState implements Serializable {
         GameState game = new GameState();
         System.out.println(game.getDeck().size());
 
-        InetAddress inetAddress = InetAddress.getByName("localhost");
-        Player player = new Player(inetAddress, 8082);
-        Player player2 = new Player(inetAddress, 8082);
-        Player player3 = new Player(inetAddress, 8082);
-        Player player4 = new Player(inetAddress, 8082);
+//        InetAddress inetAddress = InetAddress.getByName("localhost");
+        InetSocketAddress addr = new InetSocketAddress(InetAddress.getByName("127.0.0.1"), 1234);
+        Player player = new Player(addr);
+        Player player2 = new Player(addr);
+        Player player3 = new Player(addr);
+        Player player4 = new Player(addr);
 
         game.addPlayer(0, player);
         game.addPlayer(1, player2);

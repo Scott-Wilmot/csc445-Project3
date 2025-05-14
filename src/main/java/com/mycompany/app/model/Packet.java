@@ -20,9 +20,9 @@ public class Packet {
     public byte[] data;
 
     static final int PACKET_SIZE = 1024;
-    static final int OPCODE_SIZE = 2;
-    static final int TERM_SIZE = 2;
-    static final int BLOCKNUM_SIZE = 4;
+    static final int OPCODE_SIZE = Short.SIZE;
+    static final int TERM_SIZE = Short.SIZE;
+    static final int BLOCKNUM_SIZE = Short.SIZE;
     static final int ENCRYPTION_SIZE = 16;
 
 
@@ -32,7 +32,7 @@ public class Packet {
     public enum Opcode {
         JOIN,
         START,
-        SEND_GAME_STATE,
+        UPDATE,
         HEARTBEAT_REQUEST,
         HEARTBEAT,
         RECONNECT,
@@ -271,7 +271,7 @@ public class Packet {
      * Or simply, DATA_SIZE = PACKET_SIZE - 22;
      * <p/>
      *
-     * @param opcode        - the request made by the client {JOIN, SEND_GAME_STATE, HEARTBEAT}
+     * @param opcode        - the request made by the client {JOIN, UPDATE, HEARTBEAT}
      * @param blockNum      - unique number used to identify packet data for ordering
      * @param state         - the {@link GameState} shared between servers-clients
      * @param encryptionKey - key used for encrypting packet communication
@@ -298,11 +298,11 @@ public class Packet {
 
 
     public static void main(String[] args) throws IOException {
-        GameState gameState = new GameState();
-        byte[] data = createGamePacket(Opcode.JOIN, 01, 01, gameState);
-        gameState.addPlayer(1, new Player(InetAddress.getByName("localhost"), 9090));
-        gameState.addPlayer(2, new Player(InetAddress.getByName("localhost"), 9090));
-        gameState.addPlayer(3, new Player(InetAddress.getByName("localhost"), 9090));
-        System.out.printf("Length: %d\n", data.length);
+//        GameState gameState = new GameState();
+//        byte[] data = createGamePacket(Opcode.JOIN, 01, 01, gameState);
+//        gameState.addPlayer(1, new Player(InetAddress.getByName("localhost")));
+//        gameState.addPlayer(2, new Player(InetAddress.getByName("localhost")));
+//        gameState.addPlayer(3, new Player(InetAddress.getByName("localhost")));
+//        System.out.printf("Length: %d\n", data.length);
     }
 }

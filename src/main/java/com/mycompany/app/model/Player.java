@@ -2,23 +2,22 @@ package com.mycompany.app.model;
 
 import java.io.Serializable;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Player implements Serializable {
     int id;
     List<Card> playerHand;
-    InetAddress playerAddress;
-    int port;
+    InetSocketAddress playerAddress;
 
     boolean cardDrawn;
     boolean cardPlayed;
 
-    public Player(InetAddress playerAddress, int port) {
+    public Player(InetSocketAddress playerAddress) {
         playerHand = new ArrayList<>();
         this.playerAddress = playerAddress;
         cardDrawn = false;
-        this.port = port;
     }
 
     public List<Card> getPlayerHand() {
@@ -88,11 +87,15 @@ public class Player implements Serializable {
     }
 
     public InetAddress getAddress() {
+        return playerAddress.getAddress();
+    }
+
+    public InetSocketAddress getSocketAddress() {
         return playerAddress;
     }
 
     public int getPort() {
-        return port;
+        return playerAddress.getPort();
     }
 
 }

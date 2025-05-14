@@ -75,6 +75,12 @@ public class MainController {
                 boolean succeeded = (boolean) task.getValue();
                 if (succeeded) {
                     System.out.println("Connection successful");
+                    try {
+                        mainApp.getClient().listen_for_start();
+                        loadRoomScene(event, String.valueOf(ip), String.valueOf(port), "Uno - Joined Room");
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
                 } else {
                     joinRoomButton.setDisable(false);
                     showAlert("Connection Error", "Failed to connect to host socket");
@@ -115,14 +121,20 @@ public class MainController {
 
         new Thread(() -> {
            Host host = mainApp.getHost();
-           host.startGame();
+            try {
+                host.send_start_alert();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }).start();
 
         loadRoomScene(event, String.valueOf(ip), String.valueOf(port), "Uno - Joined Room");
 
+
+
         // Ensure open_lobby() thread ends, DONE
+        // send out start game message
         // change room view, DONE
-        // send out start game packets
 
     }
 

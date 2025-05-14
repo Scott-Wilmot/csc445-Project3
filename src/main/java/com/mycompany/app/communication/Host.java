@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
 
@@ -17,12 +18,20 @@ public class Host {
     GameState gameState;
     HashMap<Integer, Player> clients;
     boolean game_started;
+    int id;
 
     int PORT = 26880;
     String HOST = "0.0.0.0";
 
     public Host(String host_name) throws IOException {
         host_channel = initialize_socket(host_name);
+        gameState = new GameState();
+        id = 1;
+
+        InetSocketAddress addr = (InetSocketAddress) host_channel.getLocalAddress();
+        Player player = new Player(addr);
+        gameState.addPlayer(id, player); // Host id defaults to 1
+
         game_started = false;
         clients = new HashMap<>();
     }
@@ -78,7 +87,11 @@ public class Host {
                 System.out.println("Origin address: " + addr);
                 InetSocketAddress ip = (InetSocketAddress) addr;
                 int port = ((InetSocketAddress) addr).getPort();
-                clients.put(player_count++, new Player(ip.getAddress(), port));
+
+                Player player = new Player(ip);
+                int id = player_count++;
+                clients.put(id, player);
+                gameState.addPlayer(id, player);
 
                 SocketAddress target = new InetSocketAddress(ip.getAddress(), port);
                 buf.clear();
@@ -98,8 +111,20 @@ public class Host {
      * Alerts all connected clients of the games start. Should send alerts and wait for an ACK from each client before starting game on hosts side.
      * Needs to also communicate an initial gamestate that the host generates on its end -> this method initializes gamestate?
      */
-    public void send_start_alert() {
+    public void send_start_alert() throws IOException {
+        startGame(); // Ends the open_lobby() thread if still running
+        gameState.startGame();
+        ByteBuffer buf = ByteBuffer.allocate(Short.SIZE);
+        buf.putShort((short) 1); // 1 for start OpCode
 
+        Set<Integer> keys = clients.keySet();
+        for (Integer key : keys) {
+            Player player = clients.get(key);
+            if (player.getID() != id) { // Skips host start message since we don't need it
+                host_channel.send(buf, clients.get(key).getSocketAddress());
+                host_channel.receive(buf);
+            }
+        }
     }
 
     /**
