@@ -233,6 +233,18 @@ public class Packet {
         return buffer.getInt();
     }
 
+    /**
+     * Extracts Opcode from packet.
+     * This is used by server and clients to what request the other device is making.
+     * @param packet - any packet
+     * @return Opcode value converted from its ordinal value
+     */
+    public static Opcode extractOpcode(byte[] packet) {
+        ByteBuffer buffer = ByteBuffer.wrap(packet);
+        short opcodeOrdinal = buffer.getShort();
+        return Opcode.values()[opcodeOrdinal];
+    }
+
 
     /**
      * Creates a byte[] that contains: op-code, block-number, and data.

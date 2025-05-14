@@ -131,8 +131,50 @@ public class Client {
         while (true) {
             byte[] msg = new byte[1024];
             DatagramPacket packet = new DatagramPacket(msg, msg.length);
-
             client_socket.receive(packet);
+
+            Packet.Opcode packetOpcode = Packet.extractOpcode(msg);
+            JOIN,
+                    START,
+                    SEND_GAME_STATE,
+                    HEARTBEAT,
+                    RECONNECT,
+                    GAME_OVER,
+                    VOTE_REQUEST,
+                    VOTE_GRANTED,
+                    VOTE_DENIED
+
+            switch (packetOpcode) {
+                case JOIN:
+                    System.out.println("Join");
+                    break;
+                case START:
+                    System.out.println("Start");
+                    break;
+                case SEND_GAME_STATE:
+                    System.out.println("Send Game State");
+                    break;
+                case RECONNECT:
+                    System.out.println("Reconnect");
+                    break;
+                case GAME_OVER:
+                    System.out.println("Game Over");
+                    break;
+                case HEARTBEAT:
+                    lastHeartbeatReceived = System.currentTimeMillis();
+                    heartbeatReceived = true;
+                    break;
+                case VOTE_REQUEST:
+                    System.out.println("Vote Request");
+                    break;
+                case VOTE_GRANTED:
+                    System.out.println("Vote Granted");
+                    break;
+                case VOTE_DENIED:
+                    System.out.println("Vote Denied");
+                    break;
+            }
+
             System.out.println("Data Received.");
         }
     }
@@ -140,9 +182,31 @@ public class Client {
 
     /**
      * RAFT IMPLEMENTATION
+     * <p>
+     * Explanation of the voting process:
+     * <ol>
+     *     <li>Only one node becomes a candidate and starts the election.</li>
+     *     <li>Every other node remains a follower, and will only vote once per term</li>
+     *     <li>Followers vote for a candidate — they do not vote for themselves unless they become a candidate</li>
+     * </ol>
+     * If every candidate could vote for themselves, then it would reach a deadlock.
+     * <p>
+     * Step-by-Step Process:
+     * <ol>
+     *     <li>If a follower hasn't heard from a leader (heartbeat) within a timeout, it becomes a candidate.</li>
+     *     <li>It increments its term, votes for itself, and sends RequestVote messages to all other nodes.</li>
+     *     <li>The followers receive the vote request</li>
+     *     <ol>
+     *         <li>If the term of the received vote request is greater than or equal to its own term, it votes for that candidate. Then records it.</li>
+     *         <li>Else if it's lower, it ignores the request.</li>
+     *         <li>If it has already voted, it does not vote again.</li>
+     *     </ol>
+     *     <li> The candidate tallies its votes. If it's majority, it becomes leader.</li>
+     *     <li> Else, waits for a timeout from another candidate, then restart the process.</li>
+     * </ol>
      */
-    int currentTerm = 1;
-
+    // used to determine who is the leader
+    short currentTerm = 1;
     // how long it should take before a new election is started
     int electionTimeoutMS = ThreadLocalRandom.current().nextInt(2000, 4000);
     // who the client voted for (during the election)
@@ -276,6 +340,7 @@ public class Client {
      * Broadcast packet data to all clients, except for self.
      * Used for voting elections and can be used for updating game state.
      * Can be used by {@link #sendPacketToAllClients(byte[])} to send multiple packets (multiplexing)
+     *
      * @param packet - the data you wish to send the client; the client will catch the type of request and act accordingly
      */
     private void sendPacketToAllClients(byte[] packet) {
@@ -294,6 +359,7 @@ public class Client {
     /**
      * Broadcast multiplexed packets to all clients, except for self.
      * Uses {@link #sendPacketToAllClients(byte[])}
+     *
      * @param packets - a list of multiplexed packets to send
      */
     private void sendPacketToAllClients(List<byte[]> packets) {
