@@ -62,7 +62,7 @@
             <plugin>
                 <groupId>org.openjfx</groupId>
                 <artifactId>javafx-maven-plugin</artifactId>
-                <version>0.0.8</version> <!-- or latest -->
+                <version>0.0.8</version>
                 <executions>
                     <execution>
                         <goals>
@@ -72,8 +72,14 @@
                 </executions>
                 <configuration>
                     <mainClass>com.mycompany.app.ui.MainApp</mainClass>
+                    <options>
+                        <option>--add-modules</option>
+                        <option>javafx.controls</option>
+                        <option>javafx.fxml</option>
+                    </options>
                 </configuration>
             </plugin>
+
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

@@ -33,6 +33,7 @@ public class Packet {
         JOIN,
         START,
         SEND_GAME_STATE,
+        HEARTBEAT_REQUEST,
         HEARTBEAT,
         RECONNECT,
         GAME_OVER,
@@ -167,7 +168,7 @@ public class Packet {
     }
 
     /**
-     * Creates a acknowledgement packet used to verify server-client communication.
+     * Creates an acknowledgement packet used to verify server-client communication.
      * It can be used to join the game and verify if the client joined the game.
      * It is also used as a heartbeat packet for RAFT Protocol.
      * +------------+-----------+
@@ -194,24 +195,37 @@ public class Packet {
      * Creates a vote request packet for initiating a RAFT election.
      * This packet is sent by a candidate to all other nodes to request their vote.
      * <pre>
-     * +------------+-----------+--------------+
-     * |  OP-CODE   |   TERM    | CANDIDATE ID |
-     * +------------+-----------+--------------+
-     * | [2 bytes]  | [2 bytes] |  [4 bytes]   |
-     * +------------+-----------+--------------+
+     * +------------+-----------+--------------+--------------+
+     * |  OP-CODE   |   TERM    | CANDIDATE ID | VOTER ID     |
+     * +------------+-----------+--------------+--------------+
+     * | [2 bytes]  | [2 bytes] |  [4 bytes]   |  [4 bytes]   |
+     * +------------+-----------+--------------+--------------+
      * </pre>
      *
      * @param term - the current term of the candidate requesting the vote
      * @param candidateId - the unique ID of the candidate requesting the vote
      * @return a byte array representing the vote request packet
      */
-    public static byte[] createVoteRequest(short term, int candidateId) {
+    public static byte[] createVoteRequest(short term, int candidateId, int voterId) {
         ByteBuffer buffer = ByteBuffer.allocate(OPCODE_SIZE + TERM_SIZE + BLOCKNUM_SIZE);
         buffer.putShort((short) Opcode.VOTE_REQUEST.ordinal());
         buffer.putShort(term);
         buffer.putInt(candidateId);
+        buffer.putInt(voterId);
         return buffer.array();
     }
+
+    // not optimal but it works.
+    public static int getVoterId(byte[] packet) {
+        ByteBuffer buffer = ByteBuffer.wrap(packet);
+        // discards unnecessary
+        buffer.getShort();
+        buffer.getShort();
+        buffer.getInt();
+        // send buffer
+        return buffer.getInt();
+    }
+
 
     /**
      * Extracts the special number from an acknowledgement packet.
