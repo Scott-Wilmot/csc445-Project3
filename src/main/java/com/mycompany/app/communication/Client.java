@@ -162,7 +162,31 @@ public class Client {
                     stopRaftTimer();
                     break;
                 case VOTE_REQUEST:
-                    System.out.println("Vote Request");
+                    // again inefficient, but i'm just trying to get this working - sl
+                    ByteBuffer voteRequestBuffer = ByteBuffer.wrap(msg);
+                    voteRequestBuffer.getShort(); // Skip opcode
+                    short term = voteRequestBuffer.getShort();
+                    int candidateId = voteRequestBuffer.getInt();
+
+                    if (term > currentTerm) {
+                        currentTerm = term;
+                        vote = candidateId;
+                        raftState = RaftState.FOLLOWER;
+                    }
+
+                    // only send to candidate btw...
+                    if ((term == currentTerm) && (vote == -1 || vote == candidateId)) {
+                        vote = candidateId;
+                        System.out.println("Voting for candidate " + candidateId + " in term " + term);
+                        byte[] voteGranted = ByteBuffer.allocate(2).putShort((short) Packet.Opcode.VOTE_GRANTED.ordinal()).array();
+                        DatagramPacket response = new DatagramPacket(voteGranted, voteGranted.length, packet.getAddress(), packet.getPort());
+                        client_socket.send(response);
+                    } else {
+                        System.out.println("Denying vote to candidate " + candidateId);
+                        byte[] voteDenied = ByteBuffer.allocate(2).putShort((short) Packet.Opcode.VOTE_DENIED.ordinal()).array();
+                        DatagramPacket response = new DatagramPacket(voteDenied, voteDenied.length, packet.getAddress(), packet.getPort());
+                        client_socket.send(response);
+                    }
                     break;
                 case VOTE_GRANTED:
                     if (raftState == RaftState.CANDIDATE) {
