@@ -7,9 +7,7 @@ import com.mycompany.app.model.Player;
 import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.concurrent.*;
 
 public class Client {
@@ -35,7 +33,7 @@ public class Client {
     /**
      * Connects to the host of a game and receives a unique id from the host upon successful connection
      *
-     * @param ip - the ip address of the host
+     * @param ip   - the ip address of the host
      * @param port - the port of the host
      */
     public boolean connect(String ip, int port) throws IOException {
@@ -126,11 +124,11 @@ public class Client {
     }
 
     /**
-     *  Wait to get data from a datagram socket
+     * Wait to get data from a datagram socket
      */
     public void waiting() throws IOException {
         System.out.println("Waiting...");
-        while (true){
+        while (true) {
             byte[] msg = new byte[1024];
             DatagramPacket packet = new DatagramPacket(msg, msg.length);
 
@@ -146,7 +144,7 @@ public class Client {
     int currentTerm = 1;
 
     // how long it should take before a new election is started
-    int electionTimeoutMS = ThreadLocalRandom.current().nextInt(2000,4000);
+    int electionTimeoutMS = ThreadLocalRandom.current().nextInt(2000, 4000);
     // who the client voted for (during the election)
     int vote = -1;
     // used to see if we receieved the heartbeat
@@ -158,6 +156,7 @@ public class Client {
         CANDIDATE,
         FOLLOWER
     }
+
     RaftState raftState = RaftState.FOLLOWER; // there are 3 states; follower, candidate, leader
     // initially, the host starts off as leader,
 
@@ -259,7 +258,8 @@ public class Client {
      * 1. Change state from Follower to Candidate.
      * 2. Increase the term.
      * 3. Vote for yourself.
-     * 4. draw the rest of the owl
+     * 4. Let everyone else know
+     * 5.
      */
     public void holdRAFTElection() {
         raftState = RaftState.CANDIDATE;
@@ -269,6 +269,36 @@ public class Client {
         System.out.println("Node " + id + " starting election for term " + currentTerm);
 
         byte[] voteRequest = Packet.createVoteRequest((short) currentTerm, (short) id);
+
     }
 
+    /**
+     * Broadcast packet data to all clients, except for self.
+     * Used for voting elections and can be used for updating game state.
+     * Can be used by {@link #sendPacketToAllClients(byte[])} to send multiple packets (multiplexing)
+     * @param packet - the data you wish to send the client; the client will catch the type of request and act accordingly
+     */
+    private void sendPacketToAllClients(byte[] packet) {
+        for (Player player : gameState.getPlayers().values()) {
+            if (player.getID() == this.id) continue; // don't send to self
+            try {
+                DatagramPacket votePacket = new DatagramPacket(
+                        packet, packet.length, player.getAddress(), player.getPort());
+                client_socket.send(votePacket);
+            } catch (IOException e) {
+                System.err.println("Failed to send vote request to " + player.getID());
+            }
+        }
+    }
+
+    /**
+     * Broadcast multiplexed packets to all clients, except for self.
+     * Uses {@link #sendPacketToAllClients(byte[])}
+     * @param packets - a list of multiplexed packets to send
+     */
+    private void sendPacketToAllClients(List<byte[]> packets) {
+        for (byte[] packet : packets) {
+            sendPacketToAllClients(packet);
+        }
+    }
 }

@@ -21,6 +21,7 @@ public class Packet {
 
     static final int PACKET_SIZE = 1024;
     static final int OPCODE_SIZE = 2;
+    static final int TERM_SIZE = 2;
     static final int BLOCKNUM_SIZE = 4;
     static final int ENCRYPTION_SIZE = 16;
 
@@ -205,7 +206,7 @@ public class Packet {
      * @return a byte array representing the vote request packet
      */
     public static byte[] createVoteRequest(short term, int candidateId) {
-        ByteBuffer buffer = ByteBuffer.allocate(8); // Corrected to 8 bytes (2 + 2 + 4)
+        ByteBuffer buffer = ByteBuffer.allocate(OPCODE_SIZE + TERM_SIZE + BLOCKNUM_SIZE);
         buffer.putShort((short) Opcode.VOTE_REQUEST.ordinal());
         buffer.putShort(term);
         buffer.putInt(candidateId);
