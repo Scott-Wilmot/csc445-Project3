@@ -3,6 +3,7 @@ package com.mycompany.app.ui.uiController;
 import com.mycompany.app.model.Card;
 import com.mycompany.app.model.GameState;
 import com.mycompany.app.model.Player;
+import com.mycompany.app.ui.MainApp;
 import com.mycompany.app.ui.utils.CustomUtils;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -38,27 +39,33 @@ public class RoomViewController {
     Text currentPlayerId;
 
     GameState gameState;
+    MainApp mainApp;
+
+    public void setMainApp(MainApp mainApp) {
+        this.mainApp = mainApp;
+    }
 
     @FXML
     public void initialize() throws Exception {
-        GameState game = new GameState();
-        System.out.println(game.getDeck().size());
-
-        InetAddress inetAddress = InetAddress.getByName("localhost");
-        Player player = new Player(inetAddress, 8082);
-        Player player2 = new Player(inetAddress, 8082);
-        Player player3 = new Player(inetAddress, 8082);
-        Player player4 = new Player(inetAddress, 8082);
-
-        game.addPlayer(0, player);
-        game.addPlayer(1, player2);
-        game.addPlayer(2, player3);
-        game.addPlayer(3, player4);
-
-
-        game.startGame();
-        this.gameState = game;
-        updateDisplayInterface();
+//        GameState game = new GameState();
+//        System.out.println(game.getDeck().size());
+//
+//        InetAddress inetAddress = InetAddress.getByName("localhost");
+//        Player player = new Player(inetAddress, 8082);
+//        Player player2 = new Player(inetAddress, 8082);
+//        Player player3 = new Player(inetAddress, 8082);
+//        Player player4 = new Player(inetAddress, 8082);
+//
+//        game.addPlayer(0, player);
+//        game.addPlayer(1, player2);
+//        game.addPlayer(2, player3);
+//        game.addPlayer(3, player4);
+//
+//
+//        game.startGame();
+//        this.gameState = game;
+//        updateDisplayInterface();
+        System.out.println("Room View started");
     }
 
     /**

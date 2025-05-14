@@ -40,7 +40,7 @@ public class MainController {
     @FXML
     private Button joinRoomButton;
 
-    MainApp mainApp;
+    private MainApp mainApp;
 
     public void setMainApp(MainApp mainApp) {
         this.mainApp = mainApp;
@@ -57,7 +57,6 @@ public class MainController {
         int port = Integer.parseInt(joinRoomCode.getText());
 
         if (validateInputs(ip, String.valueOf(port))) {
-//            loadRoomScene(event, ip, String.valueOf(port), "Uno - Joined Room");
             joinRoomButton.setDisable(true);
 
             Task task = new Task() {
@@ -84,7 +83,7 @@ public class MainController {
 
             new Thread(task).start();
 
-            // Failure handling for FauLT TolERaNcE
+            // Failure handling for fault tolerance
 
         }
     }
@@ -113,6 +112,18 @@ public class MainController {
     @FXML
     private void handleStartGame(ActionEvent event) {
         System.out.println("Starting game");
+
+        new Thread(() -> {
+           Host host = mainApp.getHost();
+           host.startGame();
+        }).start();
+
+        loadRoomScene(event, String.valueOf(ip), String.valueOf(port), "Uno - Joined Room");
+
+        // Ensure open_lobby() thread ends, DONE
+        // change room view, DONE
+        // send out start game packets
+
     }
 
     /**
@@ -152,19 +163,20 @@ public class MainController {
      * Loads the room scene by navigating to the RoomView.fxml and setting up the
      * required parameters such as username and room code.
      */
-    private void loadRoomScene(ActionEvent event, String username, String roomCode, String title) {
+    private void loadRoomScene(ActionEvent event, String ip, String port, String title) {
         try {
-            URL fxmlLocation = getClass().getResource("/fxmlViews/RoomView.fxml");
-            FXMLLoader loader = new FXMLLoader(Objects.requireNonNull(fxmlLocation, "RoomView.fxml not found"));
-            Parent root = loader.load();
-
-            RoomViewController controller = loader.getController();
-            controller.setRoomCode(roomCode);
-            controller.setUsername(username);
-
-            Stage stage = (Stage) ((Button) event.getSource()).getScene().getWindow();
-            stage.setScene(new Scene(root));
-            stage.setTitle(title);
+//            URL fxmlLocation = getClass().getResource("/fxmlViews/RoomView.fxml");
+//            FXMLLoader roomLoader = new FXMLLoader(getClass().getResource("/fxmlViews/RoomView.fxml"));
+//            Parent root = roomLoader.load();
+//
+//            RoomViewController controller = roomLoader.getController();
+//            controller.setRoomCode(ip);
+//            controller.setUsername(port);
+//
+//            Stage stage = (Stage) ((Button) event.getSource()).getScene().getWindow();
+//            stage.setScene(new Scene(root));
+//            stage.setTitle(title);
+            mainApp.roomInit(ip, port);
         } catch (IOException e) {
             e.printStackTrace();
             showAlert("Loading Error", "Something went wrong while loading the room screen.");
