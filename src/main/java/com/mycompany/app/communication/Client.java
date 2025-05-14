@@ -150,15 +150,59 @@ public class Client {
                 case GAME_OVER:
                     System.out.println("Game Over");
                     break;
+                case HEARTBEAT_REQUEST:
+                    System.out.println("Heartbeat Request");
+                    heartbeatReceived = false;
+                    startRaftTimer();
+                    break;
                 case HEARTBEAT:
+                    System.out.println("Heartbeat Obtained");
                     lastHeartbeatReceived = System.currentTimeMillis();
                     heartbeatReceived = true;
+                    stopRaftTimer();
                     break;
                 case VOTE_REQUEST:
-                    System.out.println("Vote Request");
+                    // again inefficient, but i'm just trying to get this working - sl
+                    ByteBuffer voteRequestBuffer = ByteBuffer.wrap(msg);
+                    voteRequestBuffer.getShort(); // Skip opcode
+                    short term = voteRequestBuffer.getShort();
+                    int candidateId = voteRequestBuffer.getInt();
+
+                    if (term > currentTerm) {
+                        currentTerm = term;
+                        vote = candidateId;
+                        raftState = RaftState.FOLLOWER;
+                    }
+
+                    // only send to candidate btw...
+                    if ((term == currentTerm) && (vote == -1 || vote == candidateId)) {
+                        vote = candidateId;
+                        System.out.println("Voting for candidate " + candidateId + " in term " + term);
+                        byte[] voteGranted = ByteBuffer.allocate(2).putShort((short) Packet.Opcode.VOTE_GRANTED.ordinal()).array();
+                        DatagramPacket response = new DatagramPacket(voteGranted, voteGranted.length, packet.getAddress(), packet.getPort());
+                        client_socket.send(response);
+                    } else {
+                        System.out.println("Denying vote to candidate " + candidateId);
+                        byte[] voteDenied = ByteBuffer.allocate(2).putShort((short) Packet.Opcode.VOTE_DENIED.ordinal()).array();
+                        DatagramPacket response = new DatagramPacket(voteDenied, voteDenied.length, packet.getAddress(), packet.getPort());
+                        client_socket.send(response);
+                    }
                     break;
                 case VOTE_GRANTED:
-                    System.out.println("Vote Granted");
+                    if (raftState == RaftState.CANDIDATE) {
+                        int voterId = Packet.getVoterId(msg);
+                        if (!votersThisTerm.contains(voterId)) {
+                            votersThisTerm.add(voterId);
+                            votesReceived++;
+                            System.out.println("Received vote from " + voterId + " (" + votesReceived + " total)");
+
+                            int majority = (gameState.getPlayers().size() / 2) + 1;
+                            if (votesReceived >= majority) {
+                                becomeLeader();
+                                votersThisTerm.clear();
+                            }
+                        }
+                    }
                     break;
                 case VOTE_DENIED:
                     System.out.println("Vote Denied");
@@ -200,8 +244,14 @@ public class Client {
     int electionTimeoutMS = ThreadLocalRandom.current().nextInt(2000, 4000);
     // who the client voted for (during the election)
     int vote = -1;
-    // used to see if we receieved the heartbeat
-    boolean heartbeatReceived = true;
+    // used to see if we received the heartbeat;
+    // volatile because timerTask creates a new thread that needs to know the status of this value.
+    volatile boolean heartbeatReceived = true;
+    // counting votes
+    private int votesReceived = 0;
+    // storing who voted
+    private Set<Integer> votersThisTerm = new HashSet<>();
+
 
     // the states that these clients can be in
     enum RaftState {
@@ -220,8 +270,9 @@ public class Client {
      * In RAFT Typical, you send a heartbeat every x ms.
      * In our modified RAFT, you request a heartbeat and receive it.
      */
-    public void requestHeartbeat() throws IOException {
+    public void requestHeartbeat() {
         byte[] requestHeartbeat = Packet.createAckPacket(Packet.Opcode.HEARTBEAT, currentTerm);
+        sendPacketToAllClients(requestHeartbeat);
     }
 
     /**
@@ -230,12 +281,9 @@ public class Client {
      *
      * @throws IOException - if an I/O error occurs (should never occur)
      */
-    public void sendHeartbeats() throws IOException {
+    public void sendHeartbeats() {
         byte[] heartbeat = Packet.createAckPacket(Packet.Opcode.HEARTBEAT, currentTerm);
-        for (Player players : gameState.getPlayers().values()) {
-            DatagramPacket heartbeatPacket = new DatagramPacket(heartbeat, heartbeat.length, players.getAddress(), players.getPort());
-            client_socket.send(heartbeatPacket);
-        }
+        sendPacketToAllClients(heartbeat);
     }
 
     /**
@@ -248,6 +296,8 @@ public class Client {
      * 3. If timer doesn't go off, we repeat 1-2 forever.
      * 4. If timer goes off, then we need a new election to elect a new leader. (handleElectionTimeout)
      */
+    // could this code be a bit off?
+    // is the timer ever allowed to run out? because we create a new timer task every time... look into this
     private void startRaftTimer() {
         if (electionTimer != null) {
             electionTimer.cancel();
@@ -264,22 +314,18 @@ public class Client {
 
                 // Follower checks for heartbeat timeout
                 if (raftState == RaftState.FOLLOWER) {
-                    try {
-                        requestHeartbeat();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-
-                    // maybe i should do this when I receive the heartbeat at the switch-case
-                    if (heartbeatReceived) {
-                        stopRaftTimer();
-                    }
+                    requestHeartbeat();
 
                     // Check if enough time has passed without a heartbeat
                     // we need to implement updating this when we receive a heartbeat, which should be added to the main switch-case
-                    if (currentTime - lastHeartbeatReceived > electionTimeoutMS) {
-                        handleElectionTimeout();
+                    while (!heartbeatReceived) {
+                        if (currentTime - lastHeartbeatReceived > electionTimeoutMS) {
+                            handleElectionTimeout();
+                        }
                     }
+//                    if (currentTime - lastHeartbeatReceived > electionTimeoutMS) {
+//                        handleElectionTimeout();
+//                    }
                 }
             }
         }, 0, 500); // Check every 500ms; tune as needed
@@ -318,12 +364,27 @@ public class Client {
         raftState = RaftState.CANDIDATE;
         currentTerm++;
         vote = this.id;
-        int majority = (gameState.getPlayers().size() / 2) + 1;
+        votesReceived = 1; // Vote for self
+        votersThisTerm.clear();
+        votersThisTerm.add(this.id);
+
         System.out.println("Node " + id + " starting election for term " + currentTerm);
-
-        byte[] voteRequest = Packet.createVoteRequest((short) currentTerm, (short) id);
-
+        byte[] voteRequest = Packet.createVoteRequest(currentTerm, id, id); // voting for itself, hence id, id
+        sendPacketToAllClients(voteRequest);
     }
+
+
+    /**
+     * Converts raftState to leader.
+     * Sends a heartbeat which implicitly notifies every client that a new leader has been picked.
+     */
+    private void becomeLeader() {
+        raftState = RaftState.LEADER;
+        vote = -1;
+        System.out.println("Node " + id + " became LEADER for term " + currentTerm);
+        sendHeartbeats();
+    }
+
 
     /**
      * Broadcast packet data to all clients, except for self.
