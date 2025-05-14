@@ -7,9 +7,7 @@ import com.mycompany.app.model.Player;
 import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.concurrent.*;
 
 public class Client {
@@ -19,7 +17,8 @@ public class Client {
     int id; // id should have ranges of 0-3?
 
     static int PORT = 26880;
-    static String HOST = "localhost";
+    static String HOST = "129.3.20.24";
+
 
     public static void main(String[] args) throws IOException {
         Client c = new Client();
@@ -34,7 +33,7 @@ public class Client {
     /**
      * Connects to the host of a game and receives a unique id from the host upon successful connection
      *
-     * @param ip - the ip address of the host
+     * @param ip   - the ip address of the host
      * @param port - the port of the host
      */
     public boolean connect(String ip, int port) throws IOException {
@@ -125,15 +124,46 @@ public class Client {
     }
 
     /**
-     *  Wait to get data from a datagram socket
+     * Wait to get data from a datagram socket
      */
     public void waiting() throws IOException {
         System.out.println("Waiting...");
-        while (true){
+        while (true) {
             byte[] msg = new byte[1024];
             DatagramPacket packet = new DatagramPacket(msg, msg.length);
-
             client_socket.receive(packet);
+
+            Packet.Opcode packetOpcode = Packet.extractOpcode(msg);
+            switch (packetOpcode) {
+                case JOIN:
+                    System.out.println("Join");
+                    break;
+                case START:
+                    System.out.println("Start");
+                    break;
+                case SEND_GAME_STATE:
+                    System.out.println("Send Game State");
+                    break;
+                case RECONNECT:
+                    System.out.println("Reconnect");
+                    break;
+                case GAME_OVER:
+                    System.out.println("Game Over");
+                    break;
+                case HEARTBEAT:
+                    lastHeartbeatReceived = System.currentTimeMillis();
+                    heartbeatReceived = true;
+                    break;
+                case VOTE_REQUEST:
+                    System.out.println("Vote Request");
+                    break;
+                case VOTE_GRANTED:
+                    System.out.println("Vote Granted");
+                    break;
+                case VOTE_DENIED:
+                    System.out.println("Vote Denied");
+                    break;
+            }
             System.out.println("Data Received.");
         }
     }
@@ -141,14 +171,37 @@ public class Client {
 
     /**
      * RAFT IMPLEMENTATION
+     * <p>
+     * Explanation of the voting process:
+     * <ol>
+     *     <li>Only one node becomes a candidate and starts the election.</li>
+     *     <li>Every other node remains a follower, and will only vote once per term</li>
+     *     <li>Followers vote for a candidate — they do not vote for themselves unless they become a candidate</li>
+     * </ol>
+     * If every candidate could vote for themselves, then it would reach a deadlock.
+     * <p>
+     * Step-by-Step Process:
+     * <ol>
+     *     <li>If a follower hasn't heard from a leader (heartbeat) within a timeout, it becomes a candidate.</li>
+     *     <li>It increments its term, votes for itself, and sends RequestVote messages to all other nodes.</li>
+     *     <li>The followers receive the vote request</li>
+     *     <ol>
+     *         <li>If the term of the received vote request is greater than or equal to its own term, it votes for that candidate. Then records it.</li>
+     *         <li>Else if it's lower, it ignores the request.</li>
+     *         <li>If it has already voted, it does not vote again.</li>
+     *     </ol>
+     *     <li> The candidate tallies its votes. If it's majority, it becomes leader.</li>
+     *     <li> Else, waits for a timeout from another candidate, then restart the process.</li>
+     * </ol>
      */
-    int currentTerm = 1;
+    // used to determine who is the leader
+    short currentTerm = 1;
     // how long it should take before a new election is started
-    int electionTimeoutMS = 3000;
-    // how often the leader should send their heartbeat
-    int heartbeatTimeoutMS = 1400;
+    int electionTimeoutMS = ThreadLocalRandom.current().nextInt(2000, 4000);
     // who the client voted for (during the election)
     int vote = -1;
+    // used to see if we receieved the heartbeat
+    boolean heartbeatReceived = true;
 
     // the states that these clients can be in
     enum RaftState {
@@ -156,19 +209,19 @@ public class Client {
         CANDIDATE,
         FOLLOWER
     }
+
     RaftState raftState = RaftState.FOLLOWER; // there are 3 states; follower, candidate, leader
     // initially, the host starts off as leader,
 
     private Timer electionTimer;
     private long lastHeartbeatReceived = System.currentTimeMillis();
 
-
     /**
-     * In RAFT typical, you send a heartbeat every x ms.
+     * In RAFT Typical, you send a heartbeat every x ms.
      * In our modified RAFT, you request a heartbeat and receive it.
      */
     public void requestHeartbeat() throws IOException {
-        byte[] requestHeartbeat = Packet.createAckPacket(Packet.Opcode.HEARTBEAT, 0);
+        byte[] requestHeartbeat = Packet.createAckPacket(Packet.Opcode.HEARTBEAT, currentTerm);
     }
 
     /**
@@ -178,12 +231,129 @@ public class Client {
      * @throws IOException - if an I/O error occurs (should never occur)
      */
     public void sendHeartbeats() throws IOException {
-        // fail condition
-        if (raftState == RaftState.FOLLOWER ) {
-            // maybe reset the timer too?
-            return;
+        byte[] heartbeat = Packet.createAckPacket(Packet.Opcode.HEARTBEAT, currentTerm);
+        for (Player players : gameState.getPlayers().values()) {
+            DatagramPacket heartbeatPacket = new DatagramPacket(heartbeat, heartbeat.length, players.getAddress(), players.getPort());
+            client_socket.send(heartbeatPacket);
         }
+    }
+
+    /**
+     * start the timer to determine if any host has disconnected;
+     * sets the condition for when elections should be held
+     * </p>
+     * How does it work?
+     * 1. You cancel a timer that may have existed before. (This means that we received the heartbeat)
+     * 2. You create a timer that tells it to hold an election, if the heartbeat times out.
+     * 3. If timer doesn't go off, we repeat 1-2 forever.
+     * 4. If timer goes off, then we need a new election to elect a new leader. (handleElectionTimeout)
+     */
+    private void startRaftTimer() {
+        if (electionTimer != null) {
+            electionTimer.cancel();
+        }
+
+        electionTimer = new Timer(true);
+        heartbeatReceived = false;
+
+        // Schedule the timer to run repeatedly to check for heartbeat
+        electionTimer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                long currentTime = System.currentTimeMillis();
+
+                // Follower checks for heartbeat timeout
+                if (raftState == RaftState.FOLLOWER) {
+                    try {
+                        requestHeartbeat();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    // maybe i should do this when I receive the heartbeat at the switch-case
+                    if (heartbeatReceived) {
+                        stopRaftTimer();
+                    }
+
+                    // Check if enough time has passed without a heartbeat
+                    // we need to implement updating this when we receive a heartbeat, which should be added to the main switch-case
+                    if (currentTime - lastHeartbeatReceived > electionTimeoutMS) {
+                        handleElectionTimeout();
+                    }
+                }
+            }
+        }, 0, 500); // Check every 500ms; tune as needed
+    }
+
+    /**
+     * stop the timer once you received the heartbeat
+     */
+    private void stopRaftTimer() {
+        if (electionTimer != null) {
+            electionTimer.cancel();
+            electionTimer = null;
+        }
+    }
+
+    /**
+     * A helper class for creating a new election.
+     * It makes sure that the leader is not creating a new election.
+     */
+    private void handleElectionTimeout() {
+        if (raftState != RaftState.LEADER) {
+            System.out.println("Election timeout occurred. Starting new election.");
+            holdRAFTElection(); // Transition to Candidate and start election
+        }
+    }
+
+    /**
+     * Finally, after startRaftTimer runs out, and handleElectionTimeout succeeds, we start a new election.
+     * 1. Change state from Follower to Candidate.
+     * 2. Increase the term.
+     * 3. Vote for yourself.
+     * 4. Let everyone else know
+     * 5.
+     */
+    public void holdRAFTElection() {
+        raftState = RaftState.CANDIDATE;
+        currentTerm++;
+        vote = this.id;
+        int majority = (gameState.getPlayers().size() / 2) + 1;
+        System.out.println("Node " + id + " starting election for term " + currentTerm);
+
+        byte[] voteRequest = Packet.createVoteRequest((short) currentTerm, (short) id);
 
     }
 
+    /**
+     * Broadcast packet data to all clients, except for self.
+     * Used for voting elections and can be used for updating game state.
+     * Can be used by {@link #sendPacketToAllClients(byte[])} to send multiple packets (multiplexing)
+     *
+     * @param packet - the data you wish to send the client; the client will catch the type of request and act accordingly
+     */
+    private void sendPacketToAllClients(byte[] packet) {
+        for (Player player : gameState.getPlayers().values()) {
+            if (player.getID() == this.id) continue; // don't send to self
+            try {
+                DatagramPacket votePacket = new DatagramPacket(
+                        packet, packet.length, player.getAddress(), player.getPort());
+                client_socket.send(votePacket);
+            } catch (IOException e) {
+                System.err.println("Failed to send vote request to " + player.getID());
+            }
+        }
+    }
+
+    /**
+     * Broadcast multiplexed packets to all clients, except for self.
+     * Uses {@link #sendPacketToAllClients(byte[])}
+     *
+     * @param packets - a list of multiplexed packets to send
+     */
+    private void sendPacketToAllClients(List<byte[]> packets) {
+        for (byte[] packet : packets) {
+            sendPacketToAllClients(packet);
+        }
+    }
 }
