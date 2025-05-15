@@ -84,6 +84,26 @@ This project implements a multiplayer card game with the following key features:
     ```bash
    ./mvnw javafx:run
    ```
-   
+
+# Game Rules
+### 📝 Basic Rules
+- 🃏 Each player starts with 7 cards.
+
+- 🔄 On your turn, play a card that matches the color or number of the top card on the discard pile.
+
+- 🚫 If you can't play a valid card, draw one from the deck.
+
+- 🎯 The goal is to be the first to get rid of all your cards.
+
+### 💥 Special Cards
+- ⏭️ Skip – The next player loses their turn.
+
+- 🔁 Reverse – Reverses the turn order.
+
+- ➕2 Draw Two – The next player draws 2 cards and loses their turn.
+
+- 🌈 Wild – Can be played on any color; choose a new color.
+
+- ➕4 Wild Draw Four – The next player draws 4 cards, loses their turn, and you choose the new color. 
 
 
