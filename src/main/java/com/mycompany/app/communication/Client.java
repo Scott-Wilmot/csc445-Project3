@@ -17,12 +17,6 @@ public class Client extends User {
     static int PORT = 26880;
     static String HOST = "129.3.20.24";
 
-
-    public static void main(String[] args) throws IOException {
-        Client c = new Client();
-        c.connect(HOST, PORT);
-    }
-
     public Client() throws SocketException {
         client_socket = new DatagramSocket(0);
     }
@@ -76,23 +70,24 @@ public class Client extends User {
         DatagramPacket send_buf;
 
         for (Packet packet : packets) {
-            int packetSize = Short.SIZE + Short.SIZE + packet.data.length;
-            ByteBuffer buf = ByteBuffer.allocate(packetSize);
-            buf.putShort(packet.opCode);
-            buf.putShort(packet.block_num);
-            buf.put(packet.data);
+            ByteBuffer buf = ByteBuffer.wrap(packet.toGameStatePacket());
+            System.out.println("Client Send remaining: " + buf.remaining());
+            byte[] bytes = new byte[buf.remaining()];
+            buf.get(bytes);
+            System.out.println("bytes to send length: " + bytes.length);
 
-            send_buf = new DatagramPacket(buf.array(), buf.array().length);
+            send_buf = new DatagramPacket(bytes, bytes.length);
             client_socket.setSoTimeout(300);
 
-            outerLoop:
             while (true) {
                 client_socket.send(send_buf);
+                System.out.println("Packet sent to: " + send_buf.getSocketAddress());
                 try {
                     client_socket.receive(send_buf);
-                    break outerLoop;
+                    System.out.println("ACK received!!!");
+                    break;
                 } catch (SocketTimeoutException s) {
-                    continue;
+                    System.out.println("Socket timed out, try again");
                 }
             }
 

@@ -51,7 +51,6 @@ public class Host extends User {
         DatagramChannel channel = DatagramChannel.open();
         channel.configureBlocking(false);
         channel.bind(addr);
-        System.out.println("Channel opened");
         return channel;
     }
 
@@ -61,10 +60,8 @@ public class Host extends User {
      * Currently accepts any incoming message as a join request (OpCode check is a TODO).
      */
     public void open_lobby() throws IOException, InterruptedException {
-        System.out.println("local_addr: " + host_channel.getLocalAddress());
         int player_count = 1; // Defaults to 1, accounting for host
         ByteBuffer buf = ByteBuffer.allocate(4);
-        System.out.println("Waiting for players...");
 
         // This should not be the only method for holding off game start, since the loop terminates as soon as 4 players are in
         while (player_count < 4 && !game_started) {
@@ -73,13 +70,11 @@ public class Host extends User {
             buf.flip();
 
             if (addr != null) {
-                System.out.println("Origin address: " + addr);
                 InetSocketAddress ip = (InetSocketAddress) addr;
                 int port = ((InetSocketAddress) addr).getPort();
 
                 Player player = new Player(ip);
                 int playerId = player_count;
-                System.out.println("NEW PLAYER ID: " + playerId);
                 clients.put(playerId, player);
                 gameState.addPlayer(playerId, player);
 
@@ -88,14 +83,11 @@ public class Host extends User {
                 buf.put(Packet.createJoinPacket((short) 0, (short) player_count)); // Arbitrary 0 OpCode for join packets
                 buf.flip();
                 host_channel.send(buf, target);
-                System.out.println("Player x joined");
                 player_count++;
             }
 
             Thread.sleep(100);
         }
-
-        System.out.println("Player count reached or game started");
     }
 
     /**
@@ -143,8 +135,11 @@ public class Host extends User {
                 while (recv.position() == 0) { // Send loop, resends if it gets to this part, should handle packet drops
                     host_channel.send(buf, addr);
                     for (int i = 0; i < retries && recv.position() == 0; i++) { // If recv position isn't 0 we know data has been successfully received
-                        Thread.sleep(timeout);
-                        host_channel.receive(recv);
+                        while (host_channel.receive(recv) == null) {
+                            System.out.println("No packet recvd");
+                            Thread.sleep(timeout);
+                        }
+                        System.out.println("Packet received");
                     }
                 }
             }
@@ -159,24 +154,36 @@ public class Host extends User {
         HashMap<Short, byte[]> packets = new HashMap<>();
 
         while (true) {
+            buf.clear();
             SocketAddress addr = host_channel.receive(buf);
-            short opCode = buf.getShort();
-            short blockNum = buf.getShort();
-            byte[] data = new byte[Packet.DATA_SIZE];
-            buf.get(data);
 
-            packets.put(blockNum, data);
+            if (addr != null) {
+                System.out.println("BUF REMAINING SIZE: " + buf.remaining());
+                short opCode = buf.getShort();
+                short blockNum = buf.getShort();
+                byte[] data = new byte[Packet.DATA_SIZE];
+                System.out.println("ERROR? " + buf.remaining());
+                buf.get(data); // BUFFER UNDERFLOW RIGHT here
+                System.out.println("NO ERROR");
 
-            ByteBuffer ack = ByteBuffer.allocate(Short.SIZE / 8);
-            ack.putShort(opCode); // OpCode the same to help confirm the correct ack for sender
-            host_channel.send(ack, addr);
+                packets.put(blockNum, data);
 
-            buf.flip();
-            if (buf.remaining() < PACKET_SIZE) {
-                break;
+                ByteBuffer ack = ByteBuffer.allocate(Short.SIZE / 8);
+                ack.putShort(opCode); // OpCode the same to help confirm the correct ack for sender
+                System.out.println("Sending ACK");
+                host_channel.send(ack, addr);
+                System.out.println("ACK SENT");
+
+                System.out.println("Remaining buf size: " + buf.remaining());
+                if (buf.remaining() < PACKET_SIZE) {
+                    System.out.println("BREAK CONDITION!!!");
+                    System.out.println(buf.remaining() + " < " + PACKET_SIZE);
+                    break;
+                }
             }
         }
 
+        System.out.println("Exiting receive");
         gameState = Packet.processGameStatePackets(packets);
     }
 

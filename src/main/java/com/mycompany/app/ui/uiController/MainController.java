@@ -75,7 +75,6 @@ public class MainController {
             task.setOnSucceeded(success -> {
                 boolean succeeded = (boolean) task.getValue();
                 if (succeeded) {
-                    System.out.println("Connection successful");
                     try {
                         ((Client) mainApp.getUser()).listen_for_start();
                         loadRoomScene(event, String.valueOf(ip), String.valueOf(port), "Uno - Joined Room");
@@ -184,16 +183,12 @@ public class MainController {
             RoomViewController roomController = mainApp.getRoomController();
             User user = mainApp.getUser();
             if (user instanceof Client) {
-                System.out.println("user is Client");
-                // Get client instance and listen for incoming intiial gamestate
+                System.out.println("Client Instance");
                 Client client = (Client) user;
-                // Receive gamestate here
                 client.receive_update();
             } else if (user instanceof Host) {
-                System.out.println("user is Host");
-                // Send out initial gamestate
+                System.out.println("Host Instance");
                 Host host = (Host) user;
-                // Send gamestate here
                 host.update_clients();
             }
             roomController.setUser(user);

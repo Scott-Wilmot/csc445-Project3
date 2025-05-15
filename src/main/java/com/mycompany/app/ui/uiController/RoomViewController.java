@@ -5,28 +5,18 @@ import com.mycompany.app.communication.Host;
 import com.mycompany.app.communication.User;
 import com.mycompany.app.model.Card;
 import com.mycompany.app.model.GameState;
-import com.mycompany.app.model.Player;
 import com.mycompany.app.ui.MainApp;
-import com.mycompany.app.ui.utils.CustomUtils;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.geometry.Insets;
 import javafx.scene.Group;
 import javafx.scene.Node;
-import javafx.scene.control.Button;
-import javafx.scene.control.Control;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.text.Text;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 
 public class RoomViewController {
@@ -54,7 +44,7 @@ public class RoomViewController {
 
     @FXML
     public void initialize() throws Exception {
-        System.out.println("Room View started");
+
     }
 
     /**
@@ -69,7 +59,6 @@ public class RoomViewController {
         // Current user cards
         if (userCardsGroup == null) this.userCardsGroup = new Group(); // Initializes group if not initialized
         userCardsGroup.getChildren().clear();
-        System.out.println("UserID: " + user.getID() + ", " + Arrays.toString(gameState.getPlayers().keySet().toArray()));
         for (Card card : gameState.getPlayers().get(user.getID()).getPlayerHand()) {
             addNewCard(card.getFileName());
         }
@@ -84,15 +73,6 @@ public class RoomViewController {
         } else {
             throw new Exception("The discard Pile is empty");
         }
-
-
-        //For Debugging
-        for (Map.Entry<Integer, Player> entry : gameState.getPlayers().entrySet()) {
-            Player player = gameState.getPlayers().get(entry.getKey());
-            System.out.println("Key: " + entry.getKey() + ", Value: " + player.getPlayerHand());
-        }
-
-
     }
 
     /**
@@ -107,7 +87,9 @@ public class RoomViewController {
                 while (true) {
                     if (user instanceof Host) { // Host here should technically also send new gamestate to all clients immediately after receiving
                         Host host = (Host) user;
+                        System.out.println("Host attempting to receive update");
                         host.receive_update();
+                        System.out.println("UPDATE RECEIVED");
                         gameState = host.getGameState();
                     } else if (user instanceof Client) {
                         Client client = (Client) user;
@@ -122,14 +104,12 @@ public class RoomViewController {
                             throw new RuntimeException(e);
                         }
                     });
-
-                    Thread.sleep(100);
                 }
             }
         };
 
         Thread thread = new Thread(task);
-        thread.setDaemon(true);
+        //thread.setDaemon(true);
         thread.start();
 
     }
@@ -139,8 +119,7 @@ public class RoomViewController {
         // If its your turn, else let them know it's not your turn
         if (gameState.getCurrentTurn() == user.getID()) {
             gameState.drawCard(1);
-            updateDisplayInterface();
-            gameState.endTurn();
+            endTurn();
         } else {
             System.err.println("It's not your turn");
         }
@@ -148,20 +127,32 @@ public class RoomViewController {
 
     @FXML
     private void endTurn(MouseEvent event) throws Exception {
-        if (gameState.getCurrentTurn() == user.getID()) {
-            gameState.endTurn();
-            updateDisplayInterface();
 
-            if (user instanceof Host) {
-                Host host = (Host) user;
-                host.update_clients();
-            } else if (user instanceof Client) {
-                Client client = (Client) user;
-                client.send_update();
+    }
+
+    private void endTurn() throws Exception {
+        gameState.endTurn();
+        updateDisplayInterface();
+
+        Task task = new Task() {
+            @Override
+            protected Object call() throws Exception {
+                System.out.println("Attempting to send update");
+                if (user instanceof Host) {
+                    Host host = (Host) user;
+                    host.update_clients();
+                } else if (user instanceof Client) {
+                    Client client = (Client) user;
+                    client.send_update();
+                }
+                System.out.println("Update sent");
+                return null;
             }
-        } else {
-            System.err.println("It's not your turn");
-        }
+        };
+
+        Thread thread = new Thread(task);
+        thread.setDaemon(true);
+        thread.start();
     }
 
     /**
@@ -238,7 +229,6 @@ public class RoomViewController {
         List<Card> playerHand = gameState.getPlayers().get(user.getID()).getPlayerHand();
         for (int i = 0; i < playerHand.size(); i++) { // HERE
             Card card = playerHand.get(i);
-            System.out.println("image string: " + cardImageLocation + ", card file name: " + card.getFileName());
             if (cardImageLocation.equals(card.getFileName())) {
                 return i;
             }
