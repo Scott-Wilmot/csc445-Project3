@@ -72,4 +72,18 @@ This project implements a multiplayer card game with the following key features:
 - State synchronization
 - Term management
 
+# Setup and Installation
+1. Clone the repository
+2. Create a `cardImages` folder under `src/main/resources`
+3. Copy card images( download from [link](https://drive.google.com/file/d/1wNBbTLSjaluWTWW3rw3SRt3pTWFQZWLl/view?usp=sharing) ) to the `cardImages` folder
+4. Build the project:
+   ```bash
+   ./mvnw clean install
+   ```
+5. Running the project:
+    ```bash
+   ./mvnw javafx:run
+   ```
+   
+
 
