@@ -35,3 +35,41 @@ Copy all images from deck-renamed and put into the "cardImages" folder
 ./mvnw javafx:run
 ```
 
+# Overview
+This project implements a multiplayer card game with the following key features:
+- Peer-to-peer networking using UDP
+- JavaFX-based user interface
+- Raft consensus protocol for leader election
+- Real-time game state synchronization
+- Support for up to 4 players
+
+# Components
+
+### User Interface
+- JavaFX-based UI with 
+    - MainView
+    - RoomView
+- Each View is associated with its respective controller to communicate with other components
+  - `RoomViewController.java`
+  - `MainController.java`
+- Includes Card Visualization, Management, and Interactive operations
+
+### GameState
+- `GameState.java`: Manages game state class
+- `Card.java`: Card representation class
+- `Player.java`: Player management class
+- `Shape.java` & `Value.java`: Card attributes class
+
+### Communication Layer
+- `Client.java`: Handles client-side communication
+- `Host.java`: Manages server-side communication
+- `Packet.java`: Defines network packet structure
+- `Encryption.java`: Encrypts packets back and forth between host and client
+
+### Raft Implementation
+- Leader election
+- Heartbeat mechanism
+- State synchronization
+- Term management
+
+
