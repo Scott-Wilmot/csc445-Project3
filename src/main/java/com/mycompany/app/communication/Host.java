@@ -9,16 +9,15 @@ import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Set;
 
-public class Host implements User {
+public class Host extends User {
 
     DatagramChannel host_channel;
-    GameState gameState;
     HashMap<Integer, Player> clients;
     boolean game_started;
-    int id;
 
     int PORT = 26880;
     String HOST = "0.0.0.0";
@@ -26,7 +25,7 @@ public class Host implements User {
     public Host(String host_name) throws IOException {
         host_channel = initialize_socket(host_name);
         gameState = new GameState();
-        id = 1;
+        id = 0;
 
         InetSocketAddress addr = (InetSocketAddress) host_channel.getLocalAddress();
         Player player = new Player(addr);
@@ -34,16 +33,6 @@ public class Host implements User {
 
         game_started = false;
         clients = new HashMap<>();
-    }
-
-    /**
-     * Test Method for Host Instance
-     *
-     * @param args program args
-     */
-    public static void main(String[] args) throws IOException, InterruptedException {
-        Host host = new Host(InetAddress.getLocalHost().getHostName());
-        host.open_lobby();
     }
 
     /**
@@ -89,9 +78,10 @@ public class Host implements User {
                 int port = ((InetSocketAddress) addr).getPort();
 
                 Player player = new Player(ip);
-                int id = player_count++;
-                clients.put(id, player);
-                gameState.addPlayer(id, player);
+                int playerId = player_count;
+                System.out.println("NEW PLAYER ID: " + playerId);
+                clients.put(playerId, player);
+                gameState.addPlayer(playerId, player);
 
                 SocketAddress target = new InetSocketAddress(ip.getAddress(), port);
                 buf.clear();
@@ -99,6 +89,7 @@ public class Host implements User {
                 buf.flip();
                 host_channel.send(buf, target);
                 System.out.println("Player x joined");
+                player_count++;
             }
 
             Thread.sleep(100);
@@ -138,12 +129,7 @@ public class Host implements User {
 
         for (Packet packet : packets) {
             // Place packet information into a byte array
-            int packetSize = Short.SIZE + Short.SIZE + packet.data.length;
-            ByteBuffer buf = ByteBuffer.allocate(packetSize);
-            buf.putShort(packet.opCode);
-            buf.putShort(packet.block_num);
-            buf.put(packet.data);
-            System.out.println(buf.array().length);
+            ByteBuffer buf = ByteBuffer.wrap(packet.toGameStatePacket());
 
             // Now send byte array through the socket
             Set<Integer> keys = clients.keySet();
@@ -161,9 +147,37 @@ public class Host implements User {
                         host_channel.receive(recv);
                     }
                 }
-
             }
         }
+    }
+
+    /**
+     * Receives a new GameState update from a client.
+     */
+    public void receive_update() throws IOException, ClassNotFoundException {
+        ByteBuffer buf = ByteBuffer.allocate(PACKET_SIZE);
+        HashMap<Short, byte[]> packets = new HashMap<>();
+
+        while (true) {
+            SocketAddress addr = host_channel.receive(buf);
+            short opCode = buf.getShort();
+            short blockNum = buf.getShort();
+            byte[] data = new byte[Packet.DATA_SIZE];
+            buf.get(data);
+
+            packets.put(blockNum, data);
+
+            ByteBuffer ack = ByteBuffer.allocate(Short.SIZE / 8);
+            ack.putShort(opCode); // OpCode the same to help confirm the correct ack for sender
+            host_channel.send(ack, addr);
+
+            buf.flip();
+            if (buf.remaining() < PACKET_SIZE) {
+                break;
+            }
+        }
+
+        gameState = Packet.processGameStatePackets(packets);
     }
 
     /**

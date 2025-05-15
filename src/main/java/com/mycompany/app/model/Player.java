@@ -40,7 +40,7 @@ public class Player implements Serializable {
         playerHand.remove(card);
     }
 
-    Card getCard(int index) {
+    public Card getCard(int index) {
         return playerHand.get(index);
     }
 

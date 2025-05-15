@@ -8,6 +8,8 @@ import com.mycompany.app.model.GameState;
 import com.mycompany.app.model.Player;
 import com.mycompany.app.ui.MainApp;
 import com.mycompany.app.ui.utils.CustomUtils;
+import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -22,6 +24,7 @@ import javafx.scene.text.Text;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -39,7 +42,7 @@ public class RoomViewController {
     @FXML
     ImageView discardPile;
     @FXML
-    Text currentPlayerId;
+    Text playerId;
 
     User user;
     GameState gameState;
@@ -51,39 +54,23 @@ public class RoomViewController {
 
     @FXML
     public void initialize() throws Exception {
-//        GameState game = new GameState();
-//        System.out.println(game.getDeck().size());
-//
-//        InetAddress inetAddress = InetAddress.getByName("localhost");
-//        Player player = new Player(inetAddress, 8082);
-//        Player player2 = new Player(inetAddress, 8082);
-//        Player player3 = new Player(inetAddress, 8082);
-//        Player player4 = new Player(inetAddress, 8082);
-//
-//        game.addPlayer(0, player);
-//        game.addPlayer(1, player2);
-//        game.addPlayer(2, player3);
-//        game.addPlayer(3, player4);
-//
-//
-//        game.startGame();
-//        this.gameState = game;
-//        updateDisplayInterface();
         System.out.println("Room View started");
     }
 
     /**
      * Changing a different user cards since the player is changing
      */
-    private void updateDisplayInterface() throws Exception {
+    public void updateDisplayInterface() throws Exception {
 
         // Display current User ID
-        currentPlayerId.setText(String.valueOf(gameState.getCurrentTurn()));
+        if (playerId == null) playerId = new Text();
+        playerId.setText(String.valueOf(user.getID()));
 
         // Current user cards
-        if (userCardsGroup == null) this.userCardsGroup = new Group();
+        if (userCardsGroup == null) this.userCardsGroup = new Group(); // Initializes group if not initialized
         userCardsGroup.getChildren().clear();
-        for (Card card : gameState.getCurrentPlayer().getPlayerHand()) {
+        System.out.println("UserID: " + user.getID() + ", " + Arrays.toString(gameState.getPlayers().keySet().toArray()));
+        for (Card card : gameState.getPlayers().get(user.getID()).getPlayerHand()) {
             addNewCard(card.getFileName());
         }
 
@@ -108,17 +95,73 @@ public class RoomViewController {
 
     }
 
+    /**
+     * This method once started will listen constantly for the remainder of the game for any gameState updates.
+     * Once an update is received, the roomView gameState is updated as well as the UI
+     * @throws Exception
+     */
+    public void startListening() throws Exception {
+        Task task = new Task() {
+            @Override
+            protected Object call() throws Exception {
+                while (true) {
+                    if (user instanceof Host) { // Host here should technically also send new gamestate to all clients immediately after receiving
+                        Host host = (Host) user;
+                        host.receive_update();
+                        gameState = host.getGameState();
+                    } else if (user instanceof Client) {
+                        Client client = (Client) user;
+                        client.receive_update();
+                        gameState = client.getGameState();
+                    }
+
+                    Platform.runLater(() -> {
+                        try {
+                            updateDisplayInterface();
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+
+                    Thread.sleep(100);
+                }
+            }
+        };
+
+        Thread thread = new Thread(task);
+        thread.setDaemon(true);
+        thread.start();
+
+    }
+
     @FXML
     private void handleDrawCard(MouseEvent event) throws Exception {
-
-        gameState.drawCard(1);
-        updateDisplayInterface();
+        // If its your turn, else let them know it's not your turn
+        if (gameState.getCurrentTurn() == user.getID()) {
+            gameState.drawCard(1);
+            updateDisplayInterface();
+            gameState.endTurn();
+        } else {
+            System.err.println("It's not your turn");
+        }
     }
 
     @FXML
     private void endTurn(MouseEvent event) throws Exception {
-        gameState.endTurn();
-        updateDisplayInterface();
+        if (gameState.getCurrentTurn() == user.getID()) {
+            gameState.endTurn();
+            updateDisplayInterface();
+
+            if (user instanceof Host) {
+                Host host = (Host) user;
+                host.update_clients();
+            } else if (user instanceof Client) {
+                Client client = (Client) user;
+                client.send_update();
+            }
+        } else {
+            System.err.println("It's not your turn");
+        }
     }
 
     /**
@@ -136,9 +179,10 @@ public class RoomViewController {
             imageView.setOnMouseClicked(event -> {
                 try {
                     int index = getCardIndex(cardImageLocation);
-                    gameState.placeCard(gameState.getActivePlayerCard(index));
+                    gameState.placeCard(gameState.getPlayers().get(user.getID()).getPlayerHand().get(index)); // HERE
                     updateDisplayInterface();
                 } catch (Exception e) {
+                    System.err.println("BAD CARD FILE LOCATION: " + cardImageLocation);
                     throw new RuntimeException(e);
                 }
 
@@ -191,8 +235,10 @@ public class RoomViewController {
     public int getCardIndex(String cardImageLocation) throws Exception {
         String temp = cardImageLocation.split("\\.")[0];
         String[] li = temp.split("_");
-        for (int i = 0; i < gameState.getCurrentPlayer().getPlayerHand().size(); i++) {
-            Card card = gameState.getCurrentPlayer().getPlayerHand().get(i);
+        List<Card> playerHand = gameState.getPlayers().get(user.getID()).getPlayerHand();
+        for (int i = 0; i < playerHand.size(); i++) { // HERE
+            Card card = playerHand.get(i);
+            System.out.println("image string: " + cardImageLocation + ", card file name: " + card.getFileName());
             if (cardImageLocation.equals(card.getFileName())) {
                 return i;
             }
@@ -211,6 +257,10 @@ public class RoomViewController {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public void setGameState(GameState gameState) {
+        this.gameState = gameState;
     }
 
 }

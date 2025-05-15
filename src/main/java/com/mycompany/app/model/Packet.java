@@ -19,12 +19,12 @@ public class Packet {
     public short block_num;
     public byte[] data;
 
-    static final int PACKET_SIZE = 1024;
-    static final int OPCODE_SIZE = Short.SIZE;
-    static final int TERM_SIZE = Short.SIZE;
-    static final int BLOCKNUM_SIZE = Short.SIZE;
-    static final int ENCRYPTION_SIZE = 16;
-
+    public static final int PACKET_SIZE = 1024;
+    public static final int OPCODE_SIZE = Short.SIZE / 8;
+    public static final int TERM_SIZE = Short.SIZE / 8;
+    public static final int BLOCKNUM_SIZE = Short.SIZE / 8;
+    public static final int ENCRYPTION_SIZE = 16;
+    public static final int DATA_SIZE = PACKET_SIZE - OPCODE_SIZE - BLOCKNUM_SIZE; // Add encryption size later
 
     /**
      * Used to reference what the type of data the client is attempting to send
@@ -72,7 +72,6 @@ public class Packet {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
              ObjectOutputStream oos = new ObjectOutputStream(bos)) {
             oos.writeObject(gs);
-            System.out.println(bos.toByteArray().length);
             return bos.toByteArray();
         }
     }
@@ -127,16 +126,15 @@ public class Packet {
     public static ArrayList<Packet> createGameStatePackets(GameState gs) throws IOException {
         ArrayList<Packet> packets = new ArrayList<>();
         ByteBuffer ser_gs = ByteBuffer.wrap(serialize(gs));
-        int data_len = 1020; // Magic number is packet size (1024) minus the opCode and BlockNum sizes
         byte[] data;
 
         short block_num = 0;
         while (true) {
             int remaining_bytes = ser_gs.remaining();
 
-            if (remaining_bytes >= data_len) {
-                data = new byte[data_len];
-                ser_gs.get(data);
+            if (remaining_bytes >= DATA_SIZE) {
+                data = new byte[DATA_SIZE];
+                ser_gs.get(data, 0, DATA_SIZE);
                 packets.add(new Packet((short) 1, block_num, data));
                 block_num++;
             } else { // Not enough data for full packet
@@ -145,7 +143,7 @@ public class Packet {
                 packets.add(new Packet((short) 1, block_num, data));
                 break;
             }
-            System.out.println(data.length);
+
         }
 
         return packets;
@@ -158,7 +156,6 @@ public class Packet {
         Set<Short> set = map.keySet();
         List<Short> keys = new ArrayList<>(set);
         Collections.sort(keys);
-        System.out.println(Arrays.toString(keys.toArray()));
 
         // Place, in order, the data into a BOS
         for (Short key : keys) {
@@ -169,6 +166,20 @@ public class Packet {
         // Now deserialize the data
         GameState deser_gs = Packet.deserialize(bos.toByteArray());
         return deser_gs;
+    }
+
+    public byte[] toGameStatePacket() {
+        // Fill the buffer
+        ByteBuffer buf = ByteBuffer.allocate(PACKET_SIZE);
+        buf.putShort(opCode);
+        buf.putShort(block_num);
+        buf.put(data);
+
+        // Process before returning
+        buf.flip();
+        byte[] data = new byte[buf.remaining()];
+        buf.get(data);
+        return data;
     }
 
     /**
@@ -229,6 +240,7 @@ public class Packet {
         // send buffer
         return buffer.getInt();
     }
+
 
 
     /**
@@ -299,14 +311,4 @@ public class Packet {
         return buffer.array();
     }
 
-
-
-    public static void main(String[] args) throws IOException {
-//        GameState gameState = new GameState();
-//        byte[] data = createGamePacket(Opcode.JOIN, 01, 01, gameState);
-//        gameState.addPlayer(1, new Player(InetAddress.getByName("localhost")));
-//        gameState.addPlayer(2, new Player(InetAddress.getByName("localhost")));
-//        gameState.addPlayer(3, new Player(InetAddress.getByName("localhost")));
-//        System.out.printf("Length: %d\n", data.length);
-    }
 }

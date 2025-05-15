@@ -10,11 +10,9 @@ import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.*;
 
-public class Client implements User {
+public class Client extends User {
 
     DatagramSocket client_socket;
-    GameState gameState;
-    int id; // id should have ranges of 0-3?
 
     static int PORT = 26880;
     static String HOST = "129.3.20.24";
@@ -27,6 +25,18 @@ public class Client implements User {
 
     public Client() throws SocketException {
         client_socket = new DatagramSocket(0);
+    }
+
+    /**
+     * Block the Client object from futher execution until a start message is received from the host
+     */
+    public void listen_for_start() throws IOException {
+        byte[] buf = new byte[2];
+        DatagramPacket packet = new DatagramPacket(buf, buf.length);
+
+        client_socket.receive(packet);
+        client_socket.send(packet);
+
     }
 
     /**
@@ -54,18 +64,6 @@ public class Client implements User {
         } finally {
             client_socket.setSoTimeout(0);
         }
-
-    }
-
-    /**
-     * Block the Client object from futher execution until a start message is received from the host
-     */
-    public void listen_for_start() throws IOException {
-        byte[] buf = new byte[2];
-        DatagramPacket packet = new DatagramPacket(buf, buf.length);
-
-        client_socket.receive(packet);
-        client_socket.send(packet);
 
     }
 
@@ -106,18 +104,15 @@ public class Client implements User {
      */
     public void receive_update() throws IOException, ClassNotFoundException {
         HashMap<Short, byte[]> map = new HashMap<>();
-        int packet_size = 1024; // Arbitrary magic number, need better place to store this
-        DatagramPacket packet = new DatagramPacket(new byte[packet_size], packet_size);
+        DatagramPacket packet = new DatagramPacket(new byte[PACKET_SIZE], PACKET_SIZE);
 
         while (true) {
             client_socket.receive(packet);
 
-            ByteBuffer buf = ByteBuffer.allocate(packet_size); // Magic number yippeeeeee, jk fix this
-            buf.put(packet.getData());
-            buf.flip();
+            ByteBuffer buf = ByteBuffer.wrap(packet.getData());
             short opCode = buf.getShort();
             short block_num = buf.getShort();
-            byte[] data = new byte[buf.remaining()];
+            byte[] data = new byte[Packet.DATA_SIZE];
             buf.get(data);
 
             map.put(block_num, data);
@@ -127,8 +122,7 @@ public class Client implements User {
             DatagramPacket ackPacket = new DatagramPacket(ack, ack.length);
             client_socket.send(ackPacket);
 
-            if (packet.getLength() < packet_size) {
-                System.out.println(packet.getLength() + " < " + packet_size);
+            if (packet.getLength() < PACKET_SIZE) {
                 break; // The end of packets receiving, what if the ACK isn't successfully delivered?
             }
         }

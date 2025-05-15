@@ -104,7 +104,7 @@ public class GameState implements Serializable {
     public void startGame() {
         dealDeck();
         discardPile.add(deck.removeFirst());
-        currentTurn = ThreadLocalRandom.current().nextInt(playerCount);
+        currentTurn = 1;
     }
 
     /**
@@ -282,6 +282,7 @@ public class GameState implements Serializable {
         for (int i = 0; i < drawAmount; i++) {
             players.get(currentTurn).addCard(deck.removeFirst());
         }
+        nextTurn();
     }
 
     /**
@@ -326,6 +327,7 @@ public class GameState implements Serializable {
             skipActive = false;
             endTurn();
         }
+        System.out.println(currentTurn);
         players.get(currentTurn).hasDrawnCard(false);
         players.get(currentTurn).hasPlayedCard(false);
     }
@@ -361,56 +363,4 @@ public class GameState implements Serializable {
         return players;
     }
 
-
-    /**
-     * Test Main Method for Game State
-     * @param args
-     * @throws UnknownHostException
-     */
-    public static void main(String[] args) throws UnknownHostException {
-        GameState game = new GameState();
-        System.out.println(game.getDeck().size());
-
-//        InetAddress inetAddress = InetAddress.getByName("localhost");
-        InetSocketAddress addr = new InetSocketAddress(InetAddress.getByName("127.0.0.1"), 1234);
-        Player player = new Player(addr);
-        Player player2 = new Player(addr);
-        Player player3 = new Player(addr);
-        Player player4 = new Player(addr);
-
-        game.addPlayer(0, player);
-        game.addPlayer(1, player2);
-        game.addPlayer(2, player3);
-        game.addPlayer(3, player4);
-
-
-        game.startGame();
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("Game Started: " + game.getCurrentTurn());
-        String input = "";
-        while (!input.equals("quit")) {
-            System.out.println(player.getID() + ": " + player.getPlayerHand());
-            System.out.println(player2.getID() + ": " + player2.getPlayerHand());
-            System.out.println(player3.getID() + ": " + player3.getPlayerHand());
-            System.out.println(player4.getID() + ": " + player4.getPlayerHand());
-            System.out.println("Discard Pile " + game.getDiscardPile());
-
-            System.out.println("Player " + game.getCurrentTurn() + "'s turn");
-            input = scanner.nextLine();
-            if (input.equals("draw")) {
-                game.drawCard(1);
-                System.out.println();
-            }
-
-            if (input.equals("place")) {
-                int index = Integer.parseInt(scanner.nextLine());
-                game.placeCard(game.getActivePlayerCard(index));
-            }
-
-            if (input.equals("skip")) {
-                game.endTurn();
-            }
-
-        }
-    }
 }

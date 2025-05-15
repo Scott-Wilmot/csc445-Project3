@@ -197,7 +197,10 @@ public class MainController {
                 host.update_clients();
             }
             roomController.setUser(user);
-        } catch (IOException | ClassNotFoundException | InterruptedException e) {
+            roomController.setGameState(user.getGameState());
+            roomController.updateDisplayInterface();
+            roomController.startListening();
+        } catch (Exception e) {
             e.printStackTrace();
             showAlert("Loading Error", "Something went wrong while loading the room screen.");
         }
