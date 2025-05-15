@@ -53,7 +53,6 @@ public class Client extends User {
             client_socket.connect(packet.getSocketAddress());
             return true;
         } catch (SocketTimeoutException t) {
-            System.out.println("Timeout");
             return false;
         } finally {
             client_socket.setSoTimeout(0);

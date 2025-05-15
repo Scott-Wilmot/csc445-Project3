@@ -4,7 +4,9 @@ import com.mycompany.app.model.GameState;
 import com.mycompany.app.model.Packet;
 import com.mycompany.app.model.Player;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
@@ -46,7 +48,7 @@ public class Host extends User {
         if (host_name.equals("localhost")) {
             addr = new InetSocketAddress(InetAddress.getByName(host_name), 0);
         } else {
-            addr = new InetSocketAddress(InetAddress.getLocalHost().getHostName(), 0);
+            addr = new InetSocketAddress(getPublicIP(), 0);
         }
         DatagramChannel channel = DatagramChannel.open();
         channel.configureBlocking(false);
@@ -185,6 +187,24 @@ public class Host extends User {
 
         System.out.println("Exiting receive");
         gameState = Packet.processGameStatePackets(packets);
+    }
+
+    public String getPublicIP() {
+        try {
+            URL url = new URL("https://api.ipify.org"); // Simple IP response
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
+                String publicIP = in.readLine();
+                return publicIP;
+            }
+
+        } catch (Exception e) {
+            System.err.println("Could not determine public IP address.");
+            e.printStackTrace();
+        }
+        return null;
     }
 
     /**
