@@ -130,6 +130,7 @@ public class Client extends User {
      * Wait to get data from a datagram socket
      */
     public void raftWaiting() throws IOException {
+        startRaftTimer();
         System.out.println("Waiting...");
         while (true) {
             byte[] msg = new byte[1024];
@@ -271,6 +272,7 @@ public class Client extends User {
      */
     public void sendHeartbeats() {
         byte[] heartbeat = Packet.createAckPacket(Packet.Opcode.HEARTBEAT, currentTerm);
+        System.out.println("Sending heartbeat");
         sendPacketToAllClients(heartbeat);
     }
 
@@ -302,6 +304,7 @@ public class Client extends User {
 
                 // Follower checks for heartbeat timeout
                 if (raftState == RaftState.FOLLOWER) {
+                    System.out.println("Requesting HB");
                     requestHeartbeat();
 
                     // Check if enough time has passed without a heartbeat

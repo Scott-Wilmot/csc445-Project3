@@ -120,7 +120,7 @@ public class RoomViewController {
         Thread raftThread = new Thread(() -> {
             while (true) {
                 if (user instanceof Host) {
-                    System.out.println("Host listening for update");
+//                    System.out.println("Host listening for update");
                     Host host = (Host) user;
 
                 } else if (user instanceof Client) {
@@ -135,6 +135,7 @@ public class RoomViewController {
                 }
             }
         });
+        raftThread.start();
     }
 
     public Task createListeningTask() {
