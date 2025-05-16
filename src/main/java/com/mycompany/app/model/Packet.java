@@ -200,8 +200,9 @@ public class Packet {
      */
     public static byte[] createAckPacket(Opcode opcode, int specialNum) {
         ByteBuffer buffer = ByteBuffer.allocate(OPCODE_SIZE + BLOCKNUM_SIZE);
+        System.out.println(OPCODE_SIZE);
         buffer.putShort((short) opcode.ordinal());
-        buffer.putInt(specialNum);
+        buffer.putShort((short) specialNum);
         return buffer.array();
     }
 
@@ -225,8 +226,8 @@ public class Packet {
         ByteBuffer buffer = ByteBuffer.allocate(OPCODE_SIZE + TERM_SIZE + BLOCKNUM_SIZE);
         buffer.putShort((short) Opcode.VOTE_REQUEST.ordinal());
         buffer.putShort(term);
-        buffer.putInt(candidateId);
-        buffer.putInt(voterId);
+        buffer.putShort((short) candidateId);
+        buffer.putShort((short) voterId);
         return buffer.array();
     }
 
