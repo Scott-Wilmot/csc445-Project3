@@ -2,6 +2,9 @@ package com.mycompany.app.model;
 
 import java.io.Serializable;
 
+import java.io.DataInput;
+import java.io.Serializable;
+
 /**
  * Record class for card representation
  *

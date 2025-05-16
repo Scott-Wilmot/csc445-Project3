@@ -66,7 +66,7 @@ public class Client extends User {
      */
     public void send_update() throws IOException {
         ArrayList<Packet> packets = Packet.createGameStatePackets(gameState);
-        DatagramPacket send_buf;
+        DatagramPacket send_buf, ack_buf;
 
         for (Packet packet : packets) {
             ByteBuffer buf = ByteBuffer.wrap(packet.toGameStatePacket());
@@ -79,10 +79,10 @@ public class Client extends User {
             client_socket.setSoTimeout(300);
 
             while (true) {
-                client_socket.send(send_buf);
-                System.out.println("Packet sent to: " + send_buf.getSocketAddress());
+                client_socket.send(send_buf); // Sends the game state
                 try {
-                    client_socket.receive(send_buf);
+                    ack_buf = new DatagramPacket(new byte[2], 2);
+                    client_socket.receive(ack_buf); // receives an ack
                     System.out.println("ACK received!!!");
                     break;
                 } catch (SocketTimeoutException s) {

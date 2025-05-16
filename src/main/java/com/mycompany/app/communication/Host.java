@@ -121,6 +121,13 @@ public class Host extends User {
     public void update_clients() throws IOException, InterruptedException {
         ArrayList<Packet> packets = Packet.createGameStatePackets(gameState);
 
+        ByteBuffer disc = ByteBuffer.allocate(4);
+        SocketAddress sender;
+        while ((sender = host_channel.receive(disc)) != null) {
+            disc.clear();
+            System.out.println("Discarded ACK packet from: " + sender);
+        }
+
         for (Packet packet : packets) {
             // Place packet information into a byte array
             ByteBuffer buf = ByteBuffer.wrap(packet.toGameStatePacket());
@@ -134,14 +141,19 @@ public class Host extends User {
                 int retries = 3; // how many times to listen before giving up
                 int timeout = 100; // in ms
                 ByteBuffer recv = ByteBuffer.allocate(4);
-                while (recv.position() == 0) { // Send loop, resends if it gets to this part, should handle packet drops
+
+                outerloop:
+                while (true) { // Send loop, resends if it gets to this part, should handle packet drops
                     host_channel.send(buf, addr);
-                    for (int i = 0; i < retries && recv.position() == 0; i++) { // If recv position isn't 0 we know data has been successfully received
-                        while (host_channel.receive(recv) == null) {
-                            System.out.println("No packet recvd");
+                    for (int i = 0; i < retries; i++) { // If recv position isn't 0 we know data has been successfully received
+                        SocketAddress address = host_channel.receive(recv);
+                        if (address != null) { // Something was received, good, send next packet
+                            System.out.println("ACK Received");
+                            break outerloop;
+                        } else { // Nothing was received, wait before trying again
+                            System.out.println("Nothing received, waiting");
                             Thread.sleep(timeout);
                         }
-                        System.out.println("Packet received");
                     }
                 }
             }
@@ -152,34 +164,47 @@ public class Host extends User {
      * Receives a new GameState update from a client.
      */
     public void receive_update() throws IOException, ClassNotFoundException {
-        ByteBuffer buf = ByteBuffer.allocate(PACKET_SIZE);
+        ByteBuffer buf;
         HashMap<Short, byte[]> packets = new HashMap<>();
 
         while (true) {
-            buf.clear();
+            buf = ByteBuffer.allocate(PACKET_SIZE);
             SocketAddress addr = host_channel.receive(buf);
 
             if (addr != null) {
+                System.out.println("PRE FLIP BUF REMAINING: " + buf.remaining());
+                buf.flip();
                 System.out.println("BUF REMAINING SIZE: " + buf.remaining());
                 short opCode = buf.getShort();
                 short blockNum = buf.getShort();
-                byte[] data = new byte[Packet.DATA_SIZE];
-                System.out.println("ERROR? " + buf.remaining());
-                buf.get(data); // BUFFER UNDERFLOW RIGHT here
-                System.out.println("NO ERROR");
 
+//                byte[] data = new byte[Packet.DATA_SIZE];
+//                System.out.println("Data length: " + data.length + ", " + "Remaining Buffer: " + buf.remaining());
+//                buf.get(data); // BUFFER UNDERFLOW RIGHT here
+//                System.out.println("NO ERROR");
+
+                byte[] data;
+                int bufferBytes = buf.remaining();
+                if (bufferBytes >= PACKET_SIZE) { // Fill up a 1020 buffer since the packet is a full packet
+                    data = new byte[Packet.DATA_SIZE];
+                    buf.get(data);
+                } else { //Fill up a smaller data buffer since packet is smaller than a full packet
+                    data = new byte[bufferBytes];
+                    buf.get(data);
+                }
+
+                System.out.println("Putting: " + blockNum + " -> " + Arrays.toString(data));
                 packets.put(blockNum, data);
 
                 ByteBuffer ack = ByteBuffer.allocate(Short.SIZE / 8);
                 ack.putShort(opCode); // OpCode the same to help confirm the correct ack for sender
+                ack.flip();
                 System.out.println("Sending ACK");
                 host_channel.send(ack, addr);
                 System.out.println("ACK SENT");
 
-                System.out.println("Remaining buf size: " + buf.remaining());
-                if (buf.remaining() < PACKET_SIZE) {
-                    System.out.println("BREAK CONDITION!!!");
-                    System.out.println(buf.remaining() + " < " + PACKET_SIZE);
+                System.out.println("Data length: " + data.length + " < " + Packet.DATA_SIZE + "?");
+                if (data.length < Packet.DATA_SIZE) { // This tests if this is the end of the packet receiving
                     break;
                 }
             }
