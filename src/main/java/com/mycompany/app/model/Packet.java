@@ -18,6 +18,7 @@ public class Packet {
     public short id;
     public short block_num;
     public byte[] data;
+    public short raft_port;
 
     public static final int PACKET_SIZE = 1024;
     public static final int OPCODE_SIZE = Short.SIZE / 8;
@@ -47,9 +48,10 @@ public class Packet {
      * @param opCode
      * @param id
      */
-    private Packet(short opCode, short id) {
+    private Packet(short opCode, short id, short raftPort) {
         this.opCode = opCode;
         this.id = id;
+        this.raft_port = raftPort;
     }
 
     /**
@@ -114,7 +116,8 @@ public class Packet {
         ByteBuffer buf = ByteBuffer.wrap(bytes);
         short opCode = buf.getShort();
         short id = buf.getShort();
-        return new Packet(opCode, id);
+        short raftPort = buf.getShort();
+        return new Packet(opCode, id, raftPort);
     }
 
     /**
@@ -189,7 +192,7 @@ public class Packet {
      * +------------+-----------+
      * |  OP-CODE   | BLOCK-NUM |
      * +------------+-----------+
-     * | [2 bytes]  | [4 bytes] |
+     * | [2 bytes]  | [2 bytes] |
      * +------------+-----------+
      * <p/>
      *

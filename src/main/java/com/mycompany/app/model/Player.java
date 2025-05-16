@@ -10,6 +10,7 @@ public class Player implements Serializable {
     int id;
     List<Card> playerHand;
     InetSocketAddress playerAddress;
+    int raft_port;
 
     boolean cardDrawn;
     boolean cardPlayed;
@@ -98,4 +99,11 @@ public class Player implements Serializable {
         return playerAddress.getPort();
     }
 
+    public int getRaft_port() {
+        return raft_port;
+    }
+
+    public void setRaft_port(int raft_port) {
+        this.raft_port = raft_port;
+    }
 }
