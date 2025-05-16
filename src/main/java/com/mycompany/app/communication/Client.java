@@ -96,12 +96,9 @@ public class Client extends User {
         HashMap<Short, byte[]> map = new HashMap<>();
         DatagramPacket packet = new DatagramPacket(new byte[PACKET_SIZE], PACKET_SIZE);
 
-        System.out.println("Begin listening for new update");
         while (true) {
-            System.out.println("MR FREEZE");
             client_socket.receive(packet);
 
-            System.out.println("CLIENT RECEIVED DATA: " + packet.getLength() + " BYTES FROM: " + packet.getSocketAddress());
             if (packet.getLength() <= 4) {
                 Thread.sleep(500);
                 continue;
