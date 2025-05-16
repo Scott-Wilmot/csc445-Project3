@@ -66,7 +66,7 @@ public class MainApp extends Application {
      * @return host instance
      */
     public User initHost() throws IOException {
-        user = new Host("localhost");
+        user = new Host("sigma");
         return user;
     }
 
