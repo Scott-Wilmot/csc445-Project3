@@ -34,8 +34,13 @@ public class RoomViewController {
     ImageView drawPile;
     @FXML
     ImageView discardPile;
+    // The id of the player who is playing the game
     @FXML
-    Text playerId;
+    Text userId;
+    // The id of the player who is in turn
+    @FXML
+    Text currentPlayerId;
+
 
     User user;
     GameState gameState;
@@ -56,8 +61,8 @@ public class RoomViewController {
     public void updateDisplayInterface() throws Exception {
 
         // Display current User ID
-        if (playerId == null) playerId = new Text();
-        playerId.setText(String.valueOf(user.getID()));
+        if (userId == null) userId = new Text();
+        userId.setText(String.valueOf(user.getID()));
 
         // Current user cards
         if (userCardsGroup == null) this.userCardsGroup = new Group(); // Initializes group if not initialized
@@ -91,6 +96,7 @@ public class RoomViewController {
     /**
      * This method once started will listen constantly for the remainder of the game for any gameState updates.
      * Once an update is received, the roomView gameState is updated as well as the UI
+     *
      * @throws Exception
      */
     public void startListening() throws Exception {
