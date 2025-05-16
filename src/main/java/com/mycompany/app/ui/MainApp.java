@@ -13,6 +13,7 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.net.SocketException;
+import java.util.Objects;
 
 public class MainApp extends Application {
 
@@ -38,6 +39,7 @@ public class MainApp extends Application {
         mainController.setMainApp(this);
 
         Scene scene = new Scene(mainRoot);
+        scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/styles/mainView.css")).toExternalForm());
         primaryStage.setScene(scene);
         primaryStage.setTitle("445 GAME");
         primaryStage.show();

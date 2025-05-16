@@ -1,0 +1,50 @@
+.button {
+    -fx-background-color: #2196f3;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 8;
+    -fx-padding: 8 16;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 1);
+    -fx-border-color: transparent;
+    -fx-border-radius: 8;
+    -fx-transition: all 0.3s ease;
+}
+
+.button:hover {
+    -fx-background-color: #1976d2; /* darker blue on hover */
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 6, 0, 0, 2);
+}
+
+.tab-pane {
+    -fx-tab-min-width: 120px;
+    -fx-tab-min-height: 40px;
+    -fx-background-color: #f5f5f5;
+
+}
+
+.tab-pane .tab:selected .tab-label {
+    -fx-text-fill: #1a73e8;        /* Google-style blue */
+    -fx-font-weight: bold;         /* Bold text */
+    -fx-font-size: 14px;           /* Slightly larger font */
+}
+
+.tab-header-background {
+    -fx-background-color: transparent;
+}
+
+.inputField {
+    -fx-background-color: transparent;
+    -fx-border-color: #ccc;
+    -fx-border-width: 1px;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+    -fx-padding: 6px 10px;
+    -fx-font-size: 13px;
+    -fx-text-fill: #333;
+}
+
+.inputField:focused {
+    -fx-border-color: #1a73e8; /* Blue border on focus */
+}
