@@ -21,7 +21,7 @@ public class Host extends User {
     HashMap<Integer, Player> clients;
     boolean game_started;
 
-    int datagram_port = 26880;
+    short raft_port;
     String HOST = "0.0.0.0";
 
     public Host(String host_name) throws IOException {
@@ -70,6 +70,13 @@ public class Host extends User {
         while (player_count < 4 && !game_started) {
             buf.clear();
             SocketAddress addr = host_channel.receive(buf);
+
+            // THIS IS BROKEN CODE
+//            buf.getShort();// skip opcode
+//            buf.getShort();// skip
+//            raft_port = buf.getShort();
+//            buf.rewind();
+
             buf.flip();
 
             if (addr != null) {

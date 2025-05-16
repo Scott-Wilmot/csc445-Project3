@@ -107,6 +107,15 @@ public class Packet {
         return bos.toByteArray();
     }
 
+    public static byte[] createJoinPacket(short opCode, short id, short raft_port) throws IOException {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        DataOutputStream dos = new DataOutputStream(bos);
+        dos.writeShort(opCode);
+        dos.writeShort(id);
+        dos.writeShort(raft_port);
+        return bos.toByteArray();
+    }
+
     /**
      * Takes in a byte array and gets important information from the packet to return in a Packet object
      * @param bytes

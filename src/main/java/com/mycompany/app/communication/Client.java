@@ -41,9 +41,8 @@ public class Client extends User {
      * @param port - the port of the host
      */
     public boolean connect(String ip, int port) throws IOException {
-        byte[] msg = Packet.createJoinPacket((short) 0, (short) 0);
+        byte[] msg = Packet.createJoinPacket((short) 0, (short) 0, raftPort);
         DatagramPacket packet = new DatagramPacket(msg, msg.length, InetAddress.getByName(ip), port);
-
         client_socket.setSoTimeout(200);
 
         client_socket.send(packet);
