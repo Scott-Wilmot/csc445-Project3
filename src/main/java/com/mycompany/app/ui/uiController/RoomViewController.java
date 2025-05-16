@@ -16,23 +16,29 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.text.Text;
 
+import java.util.Arrays;
 import java.util.List;
 
 
 public class RoomViewController {
 
     @FXML
-    Text roomCodeId;
+    Text ipAddress;
     @FXML
-    Text username;
+    Text portNumber;
     @FXML
     Group userCardsGroup;
     @FXML
     ImageView drawPile;
     @FXML
     ImageView discardPile;
+    // The id of the player who is playing the game
     @FXML
-    Text playerId;
+    Text userId;
+    // The id of the player who is in turn
+    @FXML
+    Text currentPlayerId;
+
 
     User user;
     GameState gameState;
@@ -53,8 +59,10 @@ public class RoomViewController {
     public void updateDisplayInterface() throws Exception {
 
         // Display current User ID
-        if (playerId == null) playerId = new Text();
-        playerId.setText(String.valueOf(user.getID()));
+        if (userId == null) userId = new Text();
+        userId.setText(String.valueOf(user.getID()));
+        currentPlayerId.setText(String.valueOf(gameState.getCurrentPlayer().getID()));
+
 
         // Current user cards
         if (userCardsGroup == null) this.userCardsGroup = new Group(); // Initializes group if not initialized
@@ -78,6 +86,7 @@ public class RoomViewController {
     /**
      * This method once started will listen constantly for the remainder of the game for any gameState updates.
      * Once an update is received, the roomView gameState is updated as well as the UI
+     *
      * @throws Exception
      */
     public void startListening() throws Exception {
@@ -104,6 +113,8 @@ public class RoomViewController {
                             throw new RuntimeException(e);
                         }
                     });
+
+                    Thread.sleep(100);
                 }
             }
         };
@@ -237,12 +248,12 @@ public class RoomViewController {
     }
 
 
-    public void setRoomCode(String roomCodeId) {
-        this.roomCodeId.setText(roomCodeId);
+    public void setIpAddress(String ipAddress) {
+        this.ipAddress.setText(ipAddress);
     }
 
-    public void setUsername(String username) {
-        this.username.setText(username);
+    public void setPortNumber(String portNumber) {
+        this.portNumber.setText(portNumber);
     }
 
     public void setUser(User user) {
