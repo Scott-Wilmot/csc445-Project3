@@ -176,24 +176,25 @@ public class Host extends User {
                 buf.flip();
                 System.out.println("BUF REMAINING SIZE: " + buf.remaining());
                 short opCode = buf.getShort();
+                System.out.println("BUF REMAINING SIZE after opCode: " + buf.remaining());
                 short blockNum = buf.getShort();
-
-//                byte[] data = new byte[Packet.DATA_SIZE];
-//                System.out.println("Data length: " + data.length + ", " + "Remaining Buffer: " + buf.remaining());
-//                buf.get(data); // BUFFER UNDERFLOW RIGHT here
-//                System.out.println("NO ERROR");
+                System.out.println("BUF REMAINING SIZE after blockNum: " + buf.remaining());
 
                 byte[] data;
                 int bufferBytes = buf.remaining();
+                System.out.println("BUF REMAINING SIZE after bufferBytes: " + bufferBytes);
                 if (bufferBytes >= PACKET_SIZE) { // Fill up a 1020 buffer since the packet is a full packet
                     data = new byte[Packet.DATA_SIZE];
                     buf.get(data);
+                    System.out.println("BUF REMAINING SIZE after data Part 1: " + data.length);
                 } else { //Fill up a smaller data buffer since packet is smaller than a full packet
                     data = new byte[bufferBytes];
                     buf.get(data);
+                    System.out.println("BUF REMAINING SIZE after data Part 2: " + data.length);
                 }
 
-                System.out.println("Putting: " + blockNum + " -> " + Arrays.toString(data));
+//                System.out.println("Putting: " + blockNum + " -> " + Arrays.toString(data));
+                System.out.println("Infomration in data: " + Arrays.toString(data));
                 packets.put(blockNum, data);
 
                 ByteBuffer ack = ByteBuffer.allocate(Short.SIZE / 8);
