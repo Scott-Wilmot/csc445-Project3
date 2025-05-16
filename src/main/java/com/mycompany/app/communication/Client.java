@@ -1,6 +1,5 @@
 package com.mycompany.app.communication;
 
-import com.mycompany.app.model.GameState;
 import com.mycompany.app.model.Packet;
 import com.mycompany.app.model.Player;
 
@@ -13,12 +12,14 @@ import java.util.concurrent.*;
 public class Client extends User {
 
     DatagramSocket client_socket;
+    DatagramSocket raft_socket;
 
-    static int PORT = 26880;
+    static int raft_PORT = 26880;
     static String HOST = "129.3.20.24";
 
     public Client() throws SocketException {
         client_socket = new DatagramSocket(0);
+        raft_socket = new DatagramSocket(raft_PORT);
     }
 
     /**
@@ -30,7 +31,6 @@ public class Client extends User {
 
         client_socket.receive(packet);
         client_socket.send(packet);
-
     }
 
     /**
@@ -132,30 +132,15 @@ public class Client extends User {
     /**
      * Wait to get data from a datagram socket
      */
-    public void waiting() throws IOException {
+    public void raftWaiting() throws IOException {
         System.out.println("Waiting...");
         while (true) {
             byte[] msg = new byte[1024];
             DatagramPacket packet = new DatagramPacket(msg, msg.length);
-            client_socket.receive(packet);
+            raft_socket.receive(packet);
 
             Packet.Opcode packetOpcode = Packet.extractOpcode(msg);
             switch (packetOpcode) {
-                case JOIN:
-                    System.out.println("Join");
-                    break;
-                case START:
-                    System.out.println("Start");
-                    break;
-                case UPDATE:
-                    System.out.println("Send Game State");
-                    break;
-                case RECONNECT:
-                    System.out.println("Reconnect");
-                    break;
-                case GAME_OVER:
-                    System.out.println("Game Over");
-                    break;
                 case HEARTBEAT_REQUEST:
                     System.out.println("Heartbeat Request");
                     heartbeatReceived = false;
@@ -186,12 +171,12 @@ public class Client extends User {
                         System.out.println("Voting for candidate " + candidateId + " in term " + term);
                         byte[] voteGranted = ByteBuffer.allocate(2).putShort((short) Packet.Opcode.VOTE_GRANTED.ordinal()).array();
                         DatagramPacket response = new DatagramPacket(voteGranted, voteGranted.length, packet.getAddress(), packet.getPort());
-                        client_socket.send(response);
+                        raft_socket.send(response);
                     } else {
                         System.out.println("Denying vote to candidate " + candidateId);
                         byte[] voteDenied = ByteBuffer.allocate(2).putShort((short) Packet.Opcode.VOTE_DENIED.ordinal()).array();
                         DatagramPacket response = new DatagramPacket(voteDenied, voteDenied.length, packet.getAddress(), packet.getPort());
-                        client_socket.send(response);
+                        raft_socket.send(response);
                     }
                     break;
                 case VOTE_GRANTED:
@@ -405,7 +390,7 @@ public class Client extends User {
             try {
                 DatagramPacket votePacket = new DatagramPacket(
                         packet, packet.length, player.getAddress(), player.getPort());
-                client_socket.send(votePacket);
+                raft_socket.send(votePacket);
             } catch (IOException e) {
                 System.err.println("Failed to send vote request to " + player.getID());
             }

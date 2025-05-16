@@ -18,6 +18,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
@@ -110,6 +111,30 @@ public class RoomViewController {
         thread.setDaemon(true);
         thread.start();
 
+    }
+
+    /**
+     * Rather than creating a task, create a new thread that always run.
+     */
+    public void startRaftListener() {
+        Thread raftThread = new Thread(() -> {
+            while (true) {
+                if (user instanceof Host) {
+                    System.out.println("Host listening for update");
+                    Host host = (Host) user;
+
+                } else if (user instanceof Client) {
+                    System.out.println("Client listening for update");
+                    Client client = (Client) user;
+
+                    try {
+                        client.raftWaiting();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+        });
     }
 
     public Task createListeningTask() {

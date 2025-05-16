@@ -195,6 +195,7 @@ public class MainController {
             roomController.setGameState(user.getGameState());
             roomController.updateDisplayInterface();
             roomController.startListening();
+            roomController.startRaftListener();
         } catch (Exception e) {
             e.printStackTrace();
             showAlert("Loading Error", "Something went wrong while loading the room screen.");

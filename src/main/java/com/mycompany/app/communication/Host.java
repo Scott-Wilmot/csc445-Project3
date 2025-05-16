@@ -16,7 +16,6 @@ import java.util.HashMap;
 import java.util.Set;
 
 public class Host extends User {
-
     DatagramChannel host_channel;
     HashMap<Integer, Player> clients;
     boolean game_started;
@@ -251,5 +250,7 @@ public class Host extends User {
     public void startGame() {
         game_started = true;
     }
+
+
 
 }
