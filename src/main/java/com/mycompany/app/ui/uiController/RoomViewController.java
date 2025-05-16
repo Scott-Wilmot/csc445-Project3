@@ -146,6 +146,20 @@ public class RoomViewController {
         return task;
     }
 
+    public void startHeartbeatLoop() {
+        Task task = new Task() {
+            @Override
+            protected Object call() throws Exception {
+                user.startHeartbeat();
+                return null;
+            }
+        };
+
+        Thread thread = new Thread(task);
+        thread.setDaemon(true);
+        thread.start();
+    }
+
     @FXML
     private void handleDrawCard() throws Exception {
         // If its your turn, else let them know it's not your turn

@@ -185,6 +185,7 @@ public class MainController {
             if (user instanceof Client) {
                 System.out.println("Client Instance");
                 Client client = (Client) user;
+                System.out.println("CLIENT SOCKET ADDRESS: " + client.getSocketAddress());
                 client.receive_update();
             } else if (user instanceof Host) {
                 System.out.println("Host Instance");
@@ -195,6 +196,7 @@ public class MainController {
             roomController.setGameState(user.getGameState());
             roomController.updateDisplayInterface();
             roomController.startListening();
+            roomController.startHeartbeatLoop();
         } catch (Exception e) {
             e.printStackTrace();
             showAlert("Loading Error", "Something went wrong while loading the room screen.");

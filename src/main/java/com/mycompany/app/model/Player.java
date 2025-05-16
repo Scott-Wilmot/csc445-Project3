@@ -98,4 +98,8 @@ public class Player implements Serializable {
         return playerAddress.getPort();
     }
 
+    public String toString() {
+        return playerAddress.toString();
+    }
+
 }

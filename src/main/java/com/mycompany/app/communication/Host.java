@@ -10,15 +10,15 @@ import java.io.InputStreamReader;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Set;
+import java.time.Instant;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Host extends User {
 
     DatagramChannel host_channel;
     HashMap<Integer, Player> clients;
+    Map<SocketAddress, Long> heartbeat_timers;
     boolean game_started;
 
     int PORT = 26880;
@@ -35,6 +35,7 @@ public class Host extends User {
 
         game_started = false;
         clients = new HashMap<>();
+        heartbeat_timers = new ConcurrentHashMap<>();
     }
 
     /**
@@ -72,6 +73,9 @@ public class Host extends User {
             SocketAddress addr = host_channel.receive(buf);
 
             if (addr != null) {
+                // Initialize SocketAddr into the heartbeatTimers map as null
+                heartbeat_timers.put(addr, (long) 0);
+
                 buf.flip();
                 InetSocketAddress ip = (InetSocketAddress) addr;
                 int port = ((InetSocketAddress) addr).getPort();
@@ -91,6 +95,8 @@ public class Host extends User {
 
             Thread.sleep(100);
         }
+
+        System.out.println(Arrays.toString(heartbeat_timers.values().toArray(new Double[0])));
     }
 
     /**
@@ -144,7 +150,7 @@ public class Host extends User {
 
                 outerloop:
                 while (true) { // Send loop, resends if it gets to this part, should handle packet drops
-                    System.out.println("SENDBUFFER = " + packet.toGameStatePacket().length);
+                    System.out.println("SENDING DATA TO CLIENT" + addr);
                     buf.rewind();
                     host_channel.send(buf, addr);
 
@@ -161,7 +167,6 @@ public class Host extends User {
                             System.out.println(Arrays.toString(msg));
                             break outerloop;
                         } else {
-                            System.out.println("Nothing received");
                             i++;
                             Thread.sleep(timeout);
                         }
@@ -210,9 +215,81 @@ public class Host extends User {
         gameState = Packet.processGameStatePackets(packets);
     }
 
-    public void onClientDisconnect(int id) {
+    public void startHeartbeat() throws IOException, InterruptedException {
+        DatagramPacket packet = new DatagramPacket(new byte[2], 2);
+
+        heartbeatSocket.setSoTimeout(200);
+        while (true) {
+            try {
+                // Receive the packets and send a response
+                heartbeatSocket.receive(packet); // Socket is non-blocking, if receive happens should always be a sender address attached
+
+                long currentTime = Instant.now().toEpochMilli();
+                heartbeat_timers.put(packet.getSocketAddress(), currentTime);
+
+                packet.setLength(packet.getLength());
+                heartbeatSocket.send(packet);
+
+                checkTimes();
+            } catch (SocketTimeoutException socketTimeoutException) {
+                checkTimes();
+            }
+        }
+    }
+
+    private void checkTimes() throws IOException, InterruptedException {
+        long disconnect = 1000; // 1 second in milliseconds
+
+        try {
+            // Check if any client has not been heard from
+            Iterator<SocketAddress> iter = heartbeat_timers.keySet().iterator();
+            while (iter.hasNext()) {
+                SocketAddress sockAddr = iter.next();
+                Long timer = heartbeat_timers.get(sockAddr);
+                if (timer == 0) continue;
+
+                long elapsed = Instant.now().toEpochMilli() - timer;
+                if (elapsed >= disconnect) { // If the connection has not been active past the allowance
+                    System.out.println(elapsed + " >= " + disconnect);
+                    System.out.println("CLIENT: " + sockAddr + " DISCONNECTING");
+
+                    // Get client object
+                    int deadClientID;
+                    Set<Integer> keys = clients.keySet();
+                    for (Integer key : keys) {
+                        Player player = clients.get(key);
+                        InetSocketAddress sockIP = (InetSocketAddress) sockAddr;
+                        if (player.getSocketAddress().getAddress().equals(sockIP.getAddress())) { // If this is the player that has exceeded timer tolerance
+                            deadClientID = player.getID();
+                        }
+                    }
+
+                    // Remove the deadClient from relevant game loops
+                    System.out.println("KILLING CLIENT: " + sockAddr);
+                    heartbeat_timers.remove(sockAddr);
+                    onClientDisconnect(id);
+                    System.out.println(Arrays.toString(clients.values().toArray(new Player[0])));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void onClientDisconnect(int id) throws IOException, InterruptedException {
         gameState.removePlayer(id);
         clients.remove(id);
+
+        // New thread so the heartbeatHost thread does not get held up and panic other clients
+        new Thread(() -> {
+            try {
+                update_clients();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }).start();
     }
 
     public String getPublicIP() {

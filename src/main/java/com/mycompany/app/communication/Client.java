@@ -129,6 +129,28 @@ public class Client extends User {
         gameState = Packet.processGameStatePackets(map);
     }
 
+    public void startHeartbeat() throws IOException, InterruptedException {
+        heartbeatSocket.setSoTimeout(1000); // 1 second in millis
+
+        ByteBuffer buf = ByteBuffer.allocate(2);
+        buf.putShort((short) 4);
+        buf.flip();
+        byte[] bytes = new byte[buf.remaining()];
+        buf.get(bytes);
+
+        DatagramPacket heartbeat = new DatagramPacket(bytes, bytes.length);
+
+        try {
+            while (true) {
+                heartbeatSocket.send(heartbeat);
+                heartbeatSocket.receive(heartbeat);
+                Thread.sleep(100);
+            }
+        } catch (SocketTimeoutException to) {
+            System.err.println("HOST DISCONNECT DETECTED");
+        }
+    }
+
     /**
      * Wait to get data from a datagram socket
      */
@@ -423,4 +445,9 @@ public class Client extends User {
             sendPacketToAllClients(packet);
         }
     }
+
+    public SocketAddress getSocketAddress() {
+        return client_socket.getLocalSocketAddress();
+    }
+
 }
