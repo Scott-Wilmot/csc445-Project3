@@ -15,16 +15,28 @@
             <children>
                 <HBox alignment="CENTER" prefHeight="22.0" prefWidth="141.0" spacing="10.0">
                     <children>
-                        <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Room Code:" />
-                        <Text fx:id="roomCodeId" strokeType="OUTSIDE" strokeWidth="0.0" text="ASDF" />
+                        <Text strokeType="OUTSIDE" strokeWidth="0.0" text="IP" />
+                        <Text fx:id="ipAddress" strokeType="OUTSIDE" strokeWidth="0.0" text="&lt;some IP&gt;" />
                     </children>
                 </HBox>
                 <HBox alignment="CENTER" prefHeight="22.0" prefWidth="141.0" spacing="10.0">
                     <children>
-                        <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Username" />
-                        <Text fx:id="username" strokeType="OUTSIDE" strokeWidth="0.0" text="TestUsername" />
+                        <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Port" />
+                        <Text fx:id="portNumber" strokeType="OUTSIDE" strokeWidth="0.0" text="&lt;some port&gt;" />
                     </children>
                 </HBox>
+            <HBox alignment="CENTER" prefHeight="22.0" prefWidth="141.0" spacing="10.0">
+               <children>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Your Player ID" />
+                  <Text fx:id="userId" strokeType="OUTSIDE" strokeWidth="0.0" text="&lt;Some ID&gt;" />
+               </children>
+            </HBox>
+            <HBox alignment="CENTER" prefHeight="22.0" prefWidth="141.0" spacing="10.0">
+               <children>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="CurrentPlayerID:" />
+                  <Text fx:id="currentPlayerId" strokeType="OUTSIDE" strokeWidth="0.0" text="&lt;Some ID&gt;" />
+               </children>
+            </HBox>
             </children>
         </VBox>
         <HBox alignment="CENTER" layoutX="228.0" layoutY="30.0" prefHeight="72.0" prefWidth="128.0" spacing="10.0" AnchorPane.leftAnchor="228.0" AnchorPane.rightAnchor="206.5" AnchorPane.topAnchor="30.0">
@@ -99,12 +111,6 @@
                 </ImageView>
             </children>
         </HBox>
-      <HBox alignment="CENTER" layoutX="10.0" layoutY="10.0" prefHeight="22.0" prefWidth="141.0" spacing="10.0">
-         <children>
-            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="CurrentPlayerID:" />
-            <Text fx:id="currentPlayerId" strokeType="OUTSIDE" strokeWidth="0.0" text="&lt;Some ID&gt;" />
-         </children>
-      </HBox>
       <Button layoutX="35.0" layoutY="334.0" mnemonicParsing="false" onMouseClicked="#endTurn" text="End Turn" AnchorPane.bottomAnchor="40.0" AnchorPane.leftAnchor="35.0" AnchorPane.topAnchor="334.0" />
     </children>
 </AnchorPane>
