@@ -15,14 +15,14 @@
             <children>
                 <HBox alignment="CENTER" prefHeight="22.0" prefWidth="141.0" spacing="10.0">
                     <children>
-                        <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Room Code:" />
-                        <Text fx:id="roomCodeId" strokeType="OUTSIDE" strokeWidth="0.0" text="ASDF" />
+                        <Text strokeType="OUTSIDE" strokeWidth="0.0" text="IP" />
+                        <Text fx:id="ipAddress" strokeType="OUTSIDE" strokeWidth="0.0" text="&lt;some IP&gt;" />
                     </children>
                 </HBox>
                 <HBox alignment="CENTER" prefHeight="22.0" prefWidth="141.0" spacing="10.0">
                     <children>
-                        <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Username" />
-                        <Text fx:id="username" strokeType="OUTSIDE" strokeWidth="0.0" text="TestUsername" />
+                        <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Port" />
+                        <Text fx:id="portNumber" strokeType="OUTSIDE" strokeWidth="0.0" text="&lt;some port&gt;" />
                     </children>
                 </HBox>
             </children>

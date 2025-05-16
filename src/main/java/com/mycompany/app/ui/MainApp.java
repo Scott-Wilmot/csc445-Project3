@@ -13,8 +13,6 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.net.SocketException;
-import java.net.URL;
-import java.util.Objects;
 
 public class MainApp extends Application {
 
@@ -53,8 +51,8 @@ public class MainApp extends Application {
         roomController.setMainApp(this);
         this.roomController = roomController;
 
-        roomController.setRoomCode(ip);
-        roomController.setUsername(port);
+        roomController.setIpAddress(ip);
+        roomController.setPortNumber(port);
 
         Scene scene = new Scene(roomRoot);
         primaryStage.setScene(scene);

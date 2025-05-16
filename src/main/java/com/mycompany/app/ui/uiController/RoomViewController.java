@@ -7,23 +7,16 @@ import com.mycompany.app.model.Card;
 import com.mycompany.app.model.GameState;
 import com.mycompany.app.model.Player;
 import com.mycompany.app.ui.MainApp;
-import com.mycompany.app.ui.utils.CustomUtils;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.geometry.Insets;
 import javafx.scene.Group;
 import javafx.scene.Node;
-import javafx.scene.control.Button;
-import javafx.scene.control.Control;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.text.Text;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -32,9 +25,9 @@ import java.util.Map;
 public class RoomViewController {
 
     @FXML
-    Text roomCodeId;
+    Text ipAddress;
     @FXML
-    Text username;
+    Text portNumber;
     @FXML
     Group userCardsGroup;
     @FXML
@@ -247,12 +240,12 @@ public class RoomViewController {
     }
 
 
-    public void setRoomCode(String roomCodeId) {
-        this.roomCodeId.setText(roomCodeId);
+    public void setIpAddress(String ipAddress) {
+        this.ipAddress.setText(ipAddress);
     }
 
-    public void setUsername(String username) {
-        this.username.setText(username);
+    public void setPortNumber(String portNumber) {
+        this.portNumber.setText(portNumber);
     }
 
     public void setUser(User user) {
