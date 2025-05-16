@@ -71,7 +71,7 @@ public class RoomViewController {
 
         // Current user cards
         if (userCardsGroup == null) this.userCardsGroup = new Group(); // Initializes group if not initialized
-        userCardsGroup.getChildren().clear();
+        userCardsGroup.getChildren().clear();   // Clears the users card group
         for (Card card : gameState.getPlayers().get(user.getID()).getPlayerHand()) {
             addNewCard(card.getFileName());
         }
@@ -196,9 +196,13 @@ public class RoomViewController {
             imageView.setFitHeight(117);
             imageView.setOnMouseClicked(event -> {
                 try {
-                    int index = getCardIndex(cardImageLocation);
-                    gameState.placeCard(gameState.getPlayers().get(user.getID()).getPlayerHand().get(index)); // HERE
-                    updateDisplayInterface();
+                    if (gameState.getCurrentTurn() == user.getID()) {
+                        int index = getCardIndex(cardImageLocation);
+                        gameState.placeCard(gameState.getPlayers().get(user.getID()).getPlayerHand().get(index)); // HERE
+                        endTurn();
+                    } else {
+                        System.err.println("It's not your turn");
+                    }
                 } catch (Exception e) {
                     System.err.println("BAD CARD FILE LOCATION: " + cardImageLocation);
                     throw new RuntimeException(e);
