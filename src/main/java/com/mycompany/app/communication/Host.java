@@ -121,13 +121,6 @@ public class Host extends User {
     public void update_clients() throws IOException, InterruptedException {
         ArrayList<Packet> packets = Packet.createGameStatePackets(gameState);
 
-        ByteBuffer disc = ByteBuffer.allocate(4);
-        SocketAddress sender;
-        while ((sender = host_channel.receive(disc)) != null) {
-            disc.clear();
-            System.out.println("Discarded ACK packet from: " + sender);
-        }
-
         for (Packet packet : packets) {
             // Place packet information into a byte array
             ByteBuffer buf = ByteBuffer.wrap(packet.toGameStatePacket());
@@ -136,22 +129,39 @@ public class Host extends User {
             Set<Integer> keys = clients.keySet();
             for (Integer key : keys) {
                 Player player = clients.get(key);
+                System.out.println("PLAYER ID: " + player.getID());
+                if (player.getID() == id) {
+                    continue;
+                }
+
                 SocketAddress addr = new InetSocketAddress(player.getAddress(), player.getPort());
+                System.out.println("Destination address: " + addr);
 
                 int retries = 3; // how many times to listen before giving up
-                int timeout = 100; // in ms
+                int timeout = 50; // in ms
                 ByteBuffer recv = ByteBuffer.allocate(4);
 
                 outerloop:
                 while (true) { // Send loop, resends if it gets to this part, should handle packet drops
+                    System.out.println("SENDBUFFER = " + packet.toGameStatePacket().length);
+                    buf.rewind();
                     host_channel.send(buf, addr);
-                    for (int i = 0; i < retries; i++) { // If recv position isn't 0 we know data has been successfully received
-                        SocketAddress address = host_channel.receive(recv);
-                        if (address != null) { // Something was received, good, send next packet
-                            System.out.println("ACK Received");
+
+                    int i = 0;
+                    while (i < retries) {
+                        ByteBuffer recvBuf = ByteBuffer.allocate(4);
+                        SocketAddress srcAddr = host_channel.receive(recvBuf);
+
+                        if (srcAddr != null) {
+                            System.out.println("ACK RECEIVED!!!!!!!!");
+                            recvBuf.flip();
+                            byte[] msg = new byte[recvBuf.remaining()];
+                            recvBuf.get(msg);
+                            System.out.println(Arrays.toString(msg));
                             break outerloop;
-                        } else { // Nothing was received, wait before trying again
-                            System.out.println("Nothing received, waiting");
+                        } else {
+                            System.out.println("Nothing received");
+                            i++;
                             Thread.sleep(timeout);
                         }
                     }
@@ -163,7 +173,7 @@ public class Host extends User {
     /**
      * Receives a new GameState update from a client.
      */
-    public void receive_update() throws IOException, ClassNotFoundException {
+    public void receive_update() throws IOException, ClassNotFoundException, InterruptedException {
         HashMap<Short, byte[]> packets = new HashMap<>();
 
         while (true) {
@@ -174,23 +184,21 @@ public class Host extends User {
                 buf.flip();
 
                 if (buf.remaining() == 4) {
+                    Thread.sleep(500);
                     continue;
                 }
 
                 short opCode = buf.getShort();
                 short block_num = buf.getShort();
                 byte[] data = new byte[buf.remaining()];
-                System.out.println("OPCODE: " + opCode + ", " + "BLOCKNUM: " + block_num);
                 buf.get(data);
                 packets.put(block_num, data);
-                System.out.println(block_num + " -> " + Arrays.toString(data));
 
                 ByteBuffer ack = ByteBuffer.allocate(4);
                 ack.putShort(opCode);
                 ack.putShort(block_num);
                 host_channel.send(ack, addr);
 
-                System.out.println("DATA LENGTH: " + data.length);
                 if (data.length < Packet.DATA_SIZE) { // End loop condition if the received packet is smaller than max packet size
                     break;
                 }

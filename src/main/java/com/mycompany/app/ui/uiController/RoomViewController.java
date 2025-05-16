@@ -97,6 +97,15 @@ public class RoomViewController {
     public void startListening() throws Exception {
 
         Task task = createListeningTask();
+
+        task.setOnSucceeded(event -> {
+            try {
+                startListening();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+
         Thread thread = new Thread(task);
         thread.setDaemon(true);
         thread.start();
@@ -109,12 +118,12 @@ public class RoomViewController {
             protected Object call() throws Exception {
                 while (true) {
                     if (user instanceof Host) { // Host here should technically also send new gamestate to all clients immediately after receiving
+                        System.out.println("Host listening for update");
                         Host host = (Host) user;
-                        System.out.println("Host attempting to receive update");
                         host.receive_update();
-                        System.out.println("UPDATE RECEIVED");
                         gameState = host.getGameState();
                     } else if (user instanceof Client) {
+                        System.out.println("Client listening for update");
                         Client client = (Client) user;
                         client.receive_update();
                         gameState = client.getGameState();

@@ -70,7 +70,6 @@ public class Client extends User {
 
         for (Packet packet : packets) {
             byte[] data = packet.toGameStatePacket();
-            System.out.println("PACKET SIZE = " + data.length);
             DatagramPacket dataPacket = new DatagramPacket(data, data.length);
 
             client_socket.setSoTimeout(300);
@@ -80,7 +79,6 @@ public class Client extends User {
                 try {
                     DatagramPacket ackPacket = new DatagramPacket(new byte[4], 4);
                     client_socket.receive(ackPacket);
-                    System.out.println("ACK RECEIVED");
                     break;
                 } catch (SocketTimeoutException s) {
                     System.out.println("Socket TO, resend");
@@ -88,18 +86,26 @@ public class Client extends User {
             }
         }
 
-        System.out.println("Update complete");
+        client_socket.setSoTimeout(0);
     }
 
     /**
      * Receives GameState packets, reorders them, deserializes them and updates self GameState field to received GameState
      */
-    public void receive_update() throws IOException, ClassNotFoundException {
+    public void receive_update() throws IOException, ClassNotFoundException, InterruptedException {
         HashMap<Short, byte[]> map = new HashMap<>();
         DatagramPacket packet = new DatagramPacket(new byte[PACKET_SIZE], PACKET_SIZE);
 
+        System.out.println("Begin listening for new update");
         while (true) {
+            System.out.println("MR FREEZE");
             client_socket.receive(packet);
+
+            System.out.println("CLIENT RECEIVED DATA: " + packet.getLength() + " BYTES FROM: " + packet.getSocketAddress());
+            if (packet.getLength() <= 4) {
+                Thread.sleep(500);
+                continue;
+            }
 
             ByteBuffer buf = ByteBuffer.wrap(packet.getData());
             short opCode = buf.getShort();
