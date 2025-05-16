@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.Group?>
-<?import javafx.scene.control.Button?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
@@ -111,6 +110,5 @@
                 </ImageView>
             </children>
         </HBox>
-      <Button layoutX="35.0" layoutY="334.0" mnemonicParsing="false" onMouseClicked="#endTurn" text="End Turn" AnchorPane.bottomAnchor="40.0" AnchorPane.leftAnchor="35.0" AnchorPane.topAnchor="334.0" />
     </children>
 </AnchorPane>
