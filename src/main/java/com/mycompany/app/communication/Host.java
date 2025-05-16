@@ -119,11 +119,12 @@ public class Host extends User {
      * Retries sending if no acknowledgment is received (simple resend loop).
      */
     public void update_clients() throws IOException, InterruptedException {
-        ArrayList<Packet> packets = Packet.createGameStatePackets(gameState);
+        int encryption = 390;
+        ArrayList<byte[]> packets = (ArrayList<byte[]>) Packet.createGamePackets(encryption, gameState);
 
-        for (Packet packet : packets) {
+        for (byte[] packet : packets) {
             // Place packet information into a byte array
-            ByteBuffer buf = ByteBuffer.wrap(packet.toGameStatePacket());
+            ByteBuffer buf = ByteBuffer.wrap(packet);
 
             // Now send byte array through the socket
             Set<Integer> keys = clients.keySet();
