@@ -17,14 +17,16 @@ import java.util.Set;
 
 public class Host extends User {
     DatagramChannel host_channel;
+    DatagramSocket raft_socket;
     HashMap<Integer, Player> clients;
     boolean game_started;
 
-    int PORT = 26880;
+    short raft_port;
     String HOST = "0.0.0.0";
 
     public Host(String host_name) throws IOException {
         host_channel = initialize_socket(host_name);
+        raft_socket = new DatagramSocket();
         gameState = new GameState();
         id = 0;
 
@@ -68,6 +70,13 @@ public class Host extends User {
         while (player_count < 4 && !game_started) {
             buf.clear();
             SocketAddress addr = host_channel.receive(buf);
+
+            // THIS IS BROKEN CODE
+//            buf.getShort();// skip opcode
+//            buf.getShort();// skip
+//            raft_port = buf.getShort();
+//            buf.rewind();
+
             buf.flip();
 
             if (addr != null) {
@@ -251,6 +260,29 @@ public class Host extends User {
         game_started = true;
     }
 
+    // handshake
+    public void raftHandshake() {
+
+    }
+
+    // listen
+    public void raftListener() throws IOException {
+        raftHandshake();
+        System.out.println("Listening for heartbeats");
+        while (true) {
+            byte[] msg = new byte[1024];
+            DatagramPacket packet = new DatagramPacket(msg, msg.length);
+            raft_socket.receive(packet);
+            System.out.println("Datagram data received.");
+
+            Packet.Opcode packetOpcode = Packet.extractOpcode(msg);
+            switch (packetOpcode) {
+                case HEARTBEAT:
+                    System.out.println("test");
+            }
+
+        }
+    }
 
 
 }

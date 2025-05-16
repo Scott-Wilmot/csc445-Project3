@@ -110,7 +110,6 @@ public class RoomViewController {
         Thread thread = new Thread(task);
         thread.setDaemon(true);
         thread.start();
-
     }
 
     /**
@@ -122,7 +121,11 @@ public class RoomViewController {
                 if (user instanceof Host) {
 //                    System.out.println("Host listening for update");
                     Host host = (Host) user;
-
+                    try {
+                        host.raftListener();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
                 } else if (user instanceof Client) {
                     System.out.println("Client listening for update");
                     Client client = (Client) user;

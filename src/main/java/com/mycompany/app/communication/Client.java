@@ -14,12 +14,13 @@ public class Client extends User {
     DatagramSocket client_socket;
     DatagramSocket raft_socket;
 
-    static int raft_PORT = 26880;
     static String HOST = "129.3.20.24";
+    short raftPort;
 
     public Client() throws SocketException {
         client_socket = new DatagramSocket(0);
-        raft_socket = new DatagramSocket(raft_PORT);
+        raft_socket = new DatagramSocket(0);
+        raftPort = (short) raft_socket.getLocalPort();
     }
 
     /**
@@ -40,9 +41,8 @@ public class Client extends User {
      * @param port - the port of the host
      */
     public boolean connect(String ip, int port) throws IOException {
-        byte[] msg = Packet.createJoinPacket((short) 0, (short) 0);
+        byte[] msg = Packet.createJoinPacket((short) 0, (short) 0, raftPort);
         DatagramPacket packet = new DatagramPacket(msg, msg.length, InetAddress.getByName(ip), port);
-
         client_socket.setSoTimeout(200);
 
         client_socket.send(packet);
@@ -255,14 +255,7 @@ public class Client extends User {
     private Timer electionTimer;
     private long lastHeartbeatReceived = System.currentTimeMillis();
 
-    /**
-     * In RAFT Typical, you send a heartbeat every x ms.
-     * In our modified RAFT, you request a heartbeat and receive it.
-     */
-    public void requestHeartbeat() {
-        byte[] requestHeartbeat = Packet.createAckPacket(Packet.Opcode.HEARTBEAT, currentTerm);
-        sendPacketToAllClients(requestHeartbeat);
-    }
+
 
     /**
      * AppendEntries RPCs - these are known as heartbeats in the RAFT protocol.
@@ -288,39 +281,7 @@ public class Client extends User {
      */
     // could this code be a bit off?
     // is the timer ever allowed to run out? because we create a new timer task every time... look into this
-    private void startRaftTimer() {
-        if (electionTimer != null) {
-            electionTimer.cancel();
-        }
 
-        electionTimer = new Timer(true);
-        heartbeatReceived = false;
-
-        // Schedule the timer to run repeatedly to check for heartbeat
-        electionTimer.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                long currentTime = System.currentTimeMillis();
-
-                // Follower checks for heartbeat timeout
-                if (raftState == RaftState.FOLLOWER) {
-                    System.out.println("Requesting HB");
-                    requestHeartbeat();
-
-                    // Check if enough time has passed without a heartbeat
-                    // we need to implement updating this when we receive a heartbeat, which should be added to the main switch-case
-                    while (!heartbeatReceived) {
-                        if (currentTime - lastHeartbeatReceived > electionTimeoutMS) {
-                            handleElectionTimeout();
-                        }
-                    }
-//                    if (currentTime - lastHeartbeatReceived > electionTimeoutMS) {
-//                        handleElectionTimeout();
-//                    }
-                }
-            }
-        }, 0, 500); // Check every 500ms; tune as needed
-    }
 
     /**
      * stop the timer once you received the heartbeat
@@ -378,6 +339,60 @@ public class Client extends User {
 
 
     /**
+     * Broadcast multiplexed packets to all clients, except for self.
+     * Uses {@link #sendPacketToAllClients(byte[])}
+     *
+     * @param packets - a list of multiplexed packets to send
+     */
+    private void sendPacketToAllClients(List<byte[]> packets) {
+        for (byte[] packet : packets) {
+            sendPacketToAllClients(packet);
+        }
+    }
+
+
+    private void startRaftTimer() {
+        if (electionTimer != null) {
+            electionTimer.cancel();
+        }
+
+        electionTimer = new Timer(true);
+        heartbeatReceived = false;
+
+        electionTimer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                long currentTime = System.currentTimeMillis();
+
+                // Follower checks for heartbeat timeout
+                if (raftState == RaftState.FOLLOWER) {
+                    System.out.println("Requesting HB");
+                    requestHeartbeat();
+
+                    // Check if enough time has passed without a heartbeat
+                    while (!heartbeatReceived) {
+                        if (currentTime - lastHeartbeatReceived > electionTimeoutMS) {
+                            handleElectionTimeout();
+                        }
+                    }
+//                    if (currentTime - lastHeartbeatReceived > electionTimeoutMS) {
+//                        handleElectionTimeout();
+//                    }
+                }
+            }
+        }, 0, 500); // Check every 500ms; tune as needed
+    }
+
+    /**
+     * In RAFT Typical, you send a heartbeat every x ms.
+     * In our modified RAFT, you request a heartbeat and receive it.
+     */
+    public void requestHeartbeat() {
+        byte[] requestHeartbeat = Packet.createAckPacket(Packet.Opcode.HEARTBEAT, currentTerm);
+        sendPacketToAllClients(requestHeartbeat);
+    }
+
+    /**
      * Broadcast packet data to all clients, except for self.
      * Used for voting elections and can be used for updating game state.
      * Can be used by {@link #sendPacketToAllClients(byte[])} to send multiple packets (multiplexing)
@@ -391,21 +406,11 @@ public class Client extends User {
                 DatagramPacket votePacket = new DatagramPacket(
                         packet, packet.length, player.getAddress(), player.getPort());
                 raft_socket.send(votePacket);
+                System.out.println("Sent packet to " + player.getID());
             } catch (IOException e) {
                 System.err.println("Failed to send vote request to " + player.getID());
             }
         }
     }
 
-    /**
-     * Broadcast multiplexed packets to all clients, except for self.
-     * Uses {@link #sendPacketToAllClients(byte[])}
-     *
-     * @param packets - a list of multiplexed packets to send
-     */
-    private void sendPacketToAllClients(List<byte[]> packets) {
-        for (byte[] packet : packets) {
-            sendPacketToAllClients(packet);
-        }
-    }
 }
