@@ -126,7 +126,7 @@ public class RoomViewController {
     }
 
     @FXML
-    private void handleDrawCard(MouseEvent event) throws Exception {
+    private void handleDrawCard() throws Exception {
         // If its your turn, else let them know it's not your turn
         if (gameState.getCurrentTurn() == user.getID()) {
             gameState.drawCard(1);
@@ -136,10 +136,6 @@ public class RoomViewController {
         }
     }
 
-    @FXML
-    private void endTurn(MouseEvent event) throws Exception {
-
-    }
 
     private void endTurn() throws Exception {
         gameState.endTurn();
