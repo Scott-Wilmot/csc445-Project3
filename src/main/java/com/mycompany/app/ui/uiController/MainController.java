@@ -103,6 +103,7 @@ public class MainController {
     private void handleCreateRoomClick(ActionEvent event) throws IOException {
         createRoomButton.setDisable(true);
         Host host = (Host) mainApp.initHost();
+        System.out.println(host.getLocalAddress());
         ip.setText(host.getLocalAddress());
         port.setText(host.getLocalPort());
 
@@ -128,8 +129,7 @@ public class MainController {
                 throw new RuntimeException(e);
             }
         }).start();
-
-        loadRoomScene(event, String.valueOf(ip), String.valueOf(port), "Uno - Joined Room");
+        loadRoomScene(event, ip.getText(), port.getText(), "Uno - Joined Room");
 
 
 

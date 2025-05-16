@@ -50,7 +50,6 @@ public class MainApp extends Application {
         RoomViewController roomController = roomLoader.getController();
         roomController.setMainApp(this);
         this.roomController = roomController;
-
         roomController.setIpAddress(ip);
         roomController.setPortNumber(port);
 
