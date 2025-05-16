@@ -164,47 +164,34 @@ public class Host extends User {
      * Receives a new GameState update from a client.
      */
     public void receive_update() throws IOException, ClassNotFoundException {
-        ByteBuffer buf;
         HashMap<Short, byte[]> packets = new HashMap<>();
 
         while (true) {
-            buf = ByteBuffer.allocate(PACKET_SIZE);
+            ByteBuffer buf = ByteBuffer.allocate(1024);
             SocketAddress addr = host_channel.receive(buf);
 
             if (addr != null) {
-                System.out.println("PRE FLIP BUF REMAINING: " + buf.remaining());
                 buf.flip();
-                System.out.println("BUF REMAINING SIZE: " + buf.remaining());
-                short opCode = buf.getShort();
-                short blockNum = buf.getShort();
 
-//                byte[] data = new byte[Packet.DATA_SIZE];
-//                System.out.println("Data length: " + data.length + ", " + "Remaining Buffer: " + buf.remaining());
-//                buf.get(data); // BUFFER UNDERFLOW RIGHT here
-//                System.out.println("NO ERROR");
-
-                byte[] data;
-                int bufferBytes = buf.remaining();
-                if (bufferBytes >= PACKET_SIZE) { // Fill up a 1020 buffer since the packet is a full packet
-                    data = new byte[Packet.DATA_SIZE];
-                    buf.get(data);
-                } else { //Fill up a smaller data buffer since packet is smaller than a full packet
-                    data = new byte[bufferBytes];
-                    buf.get(data);
+                if (buf.remaining() == 4) {
+                    continue;
                 }
 
-                System.out.println("Putting: " + blockNum + " -> " + Arrays.toString(data));
-                packets.put(blockNum, data);
+                short opCode = buf.getShort();
+                short block_num = buf.getShort();
+                byte[] data = new byte[buf.remaining()];
+                System.out.println("OPCODE: " + opCode + ", " + "BLOCKNUM: " + block_num);
+                buf.get(data);
+                packets.put(block_num, data);
+                System.out.println(block_num + " -> " + Arrays.toString(data));
 
-                ByteBuffer ack = ByteBuffer.allocate(Short.SIZE / 8);
-                ack.putShort(opCode); // OpCode the same to help confirm the correct ack for sender
-                ack.flip();
-                System.out.println("Sending ACK");
+                ByteBuffer ack = ByteBuffer.allocate(4);
+                ack.putShort(opCode);
+                ack.putShort(block_num);
                 host_channel.send(ack, addr);
-                System.out.println("ACK SENT");
 
-                System.out.println("Data length: " + data.length + " < " + Packet.DATA_SIZE + "?");
-                if (data.length < Packet.DATA_SIZE) { // This tests if this is the end of the packet receiving
+                System.out.println("DATA LENGTH: " + data.length);
+                if (data.length < Packet.DATA_SIZE) { // End loop condition if the received packet is smaller than max packet size
                     break;
                 }
             }

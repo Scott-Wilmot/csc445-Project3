@@ -50,6 +50,7 @@ public class Client extends User {
             client_socket.receive(packet);
             Packet data = Packet.processJoinPacket(packet.getData());
             id = data.id; // Yippeeeeeee should be binded and connected now
+            System.out.println("Connecting to SocketAddr: " + packet.getSocketAddress());
             client_socket.connect(packet.getSocketAddress());
             return true;
         } catch (SocketTimeoutException t) {
@@ -66,31 +67,28 @@ public class Client extends User {
      */
     public void send_update() throws IOException {
         ArrayList<Packet> packets = Packet.createGameStatePackets(gameState);
-        DatagramPacket send_buf, ack_buf;
 
         for (Packet packet : packets) {
-            ByteBuffer buf = ByteBuffer.wrap(packet.toGameStatePacket());
-            System.out.println("Client Send remaining: " + buf.remaining());
-            byte[] bytes = new byte[buf.remaining()];
-            buf.get(bytes);
-            System.out.println("bytes to send length: " + bytes.length);
+            byte[] data = packet.toGameStatePacket();
+            System.out.println("PACKET SIZE = " + data.length);
+            DatagramPacket dataPacket = new DatagramPacket(data, data.length);
 
-            send_buf = new DatagramPacket(bytes, bytes.length);
             client_socket.setSoTimeout(300);
-
             while (true) {
-                client_socket.send(send_buf); // Sends the game state
+                client_socket.send(dataPacket);
+
                 try {
-                    ack_buf = new DatagramPacket(new byte[2], 2);
-                    client_socket.receive(ack_buf); // receives an ack
-                    System.out.println("ACK received!!!");
+                    DatagramPacket ackPacket = new DatagramPacket(new byte[4], 4);
+                    client_socket.receive(ackPacket);
+                    System.out.println("ACK RECEIVED");
                     break;
                 } catch (SocketTimeoutException s) {
-                    System.out.println("Socket timed out, try again");
+                    System.out.println("Socket TO, resend");
                 }
             }
-
         }
+
+        System.out.println("Update complete");
     }
 
     /**

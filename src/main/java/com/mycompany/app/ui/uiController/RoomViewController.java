@@ -90,6 +90,15 @@ public class RoomViewController {
      * @throws Exception
      */
     public void startListening() throws Exception {
+
+        Task task = createListeningTask();
+        Thread thread = new Thread(task);
+        thread.setDaemon(true);
+        thread.start();
+
+    }
+
+    public Task createListeningTask() {
         Task task = new Task() {
             @Override
             protected Object call() throws Exception {
@@ -119,10 +128,7 @@ public class RoomViewController {
             }
         };
 
-        Thread thread = new Thread(task);
-        //thread.setDaemon(true);
-        thread.start();
-
+        return task;
     }
 
     @FXML
