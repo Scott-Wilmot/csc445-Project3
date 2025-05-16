@@ -33,6 +33,7 @@ public class Packet {
         JOIN,
         START,
         UPDATE,
+        ACK,
         HEARTBEAT_REQUEST,
         HEARTBEAT,
         RECONNECT,
@@ -123,31 +124,31 @@ public class Packet {
      * @param gs
      * @return
      */
-    public static ArrayList<Packet> createGameStatePackets(GameState gs) throws IOException {
-        ArrayList<Packet> packets = new ArrayList<>();
-        ByteBuffer ser_gs = ByteBuffer.wrap(serialize(gs));
-        byte[] data;
-
-        short block_num = 0;
-        while (true) {
-            int remaining_bytes = ser_gs.remaining();
-
-            if (remaining_bytes >= DATA_SIZE) {
-                data = new byte[DATA_SIZE];
-                ser_gs.get(data, 0, DATA_SIZE);
-                packets.add(new Packet((short) 1, block_num, data));
-                block_num++;
-            } else { // Not enough data for full packet
-                data = new byte[remaining_bytes];
-                ser_gs.get(data);
-                packets.add(new Packet((short) 1, block_num, data));
-                break;
-            }
-
-        }
-
-        return packets;
-    }
+//    public static ArrayList<Packet> createGameStatePackets(GameState gs) throws IOException {
+//        ArrayList<Packet> packets = new ArrayList<>();
+//        ByteBuffer ser_gs = ByteBuffer.wrap(serialize(gs));
+//        byte[] data;
+//
+//        short block_num = 0;
+//        while (true) {
+//            int remaining_bytes = ser_gs.remaining();
+//
+//            if (remaining_bytes >= DATA_SIZE) {
+//                data = new byte[DATA_SIZE];
+//                ser_gs.get(data, 0, DATA_SIZE);
+//                packets.add(new Packet((short) 1, block_num, data));
+//                block_num++;
+//            } else { // Not enough data for full packet
+//                data = new byte[remaining_bytes];
+//                ser_gs.get(data);
+//                packets.add(new Packet((short) 1, block_num, data));
+//                break;
+//            }
+//
+//        }
+//
+//        return packets;
+//    }
 
     public static GameState processGameStatePackets(HashMap<Short, byte[]> map) throws IOException, ClassNotFoundException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -168,19 +169,19 @@ public class Packet {
         return deser_gs;
     }
 
-    public byte[] toGameStatePacket() {
-        // Fill the buffer
-        ByteBuffer buf = ByteBuffer.allocate(PACKET_SIZE);
-        buf.putShort(opCode);
-        buf.putShort(block_num);
-        buf.put(data);
-
-        // Process before returning
-        buf.flip();
-        byte[] data = new byte[buf.remaining()];
-        buf.get(data);
-        return data;
-    }
+//    public byte[] toGameStatePacket() {
+//        // Fill the buffer
+//        ByteBuffer buf = ByteBuffer.allocate(PACKET_SIZE);
+//        buf.putShort(opCode);
+//        buf.putShort(block_num);
+//        buf.put(data);
+//
+//        // Process before returning
+//        buf.flip();
+//        byte[] data = new byte[buf.remaining()];
+//        buf.get(data);
+//        return data;
+//    }
 
     /**
      * Creates an acknowledgement packet used to verify server-client communication.
@@ -287,14 +288,31 @@ public class Packet {
      * Or simply, DATA_SIZE = PACKET_SIZE - 22;
      * <p/>
      *
-     * @param opcode        - the request made by the client {JOIN, UPDATE, HEARTBEAT}
-     * @param blockNum      - unique number used to identify packet data for ordering
+//     * @param opcode        - the request made by the client
+//     * @param blockNum      - unique number used to identify packet data for ordering
      * @param state         - the {@link GameState} shared between servers-clients
      * @param encryptionKey - key used for encrypting packet communication
      * @return data byte[] packet used to send partitioned/whole Gamestate data.
      * @throws IOException - if an I/O error occurs (should never occur)
      */
-    public static byte[] createGamePacket(Opcode opcode, int blockNum, int encryptionKey, GameState state) throws IOException {
+//    public static byte[] createGamePacket(Opcode opcode, int blockNum, int encryptionKey, GameState state) throws IOException {
+//        // Serialize GameState
+//        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//        ObjectOutputStream oos = new ObjectOutputStream(baos);
+//        oos.writeObject(state);
+//        oos.flush();
+//        byte[] stateBytes = baos.toByteArray();
+//
+//        ByteBuffer buffer = ByteBuffer.allocate(PACKET_SIZE);
+//        buffer.putShort((short) opcode.ordinal());
+//        buffer.putInt(blockNum);
+//        buffer.put(new byte[ENCRYPTION_SIZE]);         // add encryption key in the future; for now, placeholder.
+//        buffer.put(stateBytes);
+//
+//        return buffer.array();
+//    }
+
+    public static List<byte[]> createGamePackets(int encryptionKey, GameState state) throws IOException {
         // Serialize GameState
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ObjectOutputStream oos = new ObjectOutputStream(baos);
@@ -302,13 +320,26 @@ public class Packet {
         oos.flush();
         byte[] stateBytes = baos.toByteArray();
 
-        ByteBuffer buffer = ByteBuffer.allocate(PACKET_SIZE);
-        buffer.putShort((short) opcode.ordinal());
-        buffer.putInt(blockNum);
-        buffer.put(new byte[ENCRYPTION_SIZE]);         // add encryption key in the future; for now, placeholder.
-        buffer.put(stateBytes);
+        // Metadata sizes
+        int metadataSize = Short.BYTES + Integer.BYTES + ENCRYPTION_SIZE; // opcode + blockNum + encryption
+        int payloadSize = PACKET_SIZE - metadataSize;
 
-        return buffer.array();
+        List<byte[]> packets = new ArrayList<>();
+        int blockNum = 0;
+
+        for (int i = 0; i < stateBytes.length; i += payloadSize) {
+            int chunkSize = Math.min(payloadSize, stateBytes.length - i);
+            ByteBuffer buffer = ByteBuffer.allocate(PACKET_SIZE);
+
+            buffer.putShort((short) Opcode.UPDATE.ordinal());
+            buffer.putInt(blockNum++);
+            buffer.put(new byte[ENCRYPTION_SIZE]); // Placeholder for encryption key
+            buffer.put(stateBytes, i, chunkSize);
+
+            packets.add(buffer.array());
+        }
+
+        return packets;
     }
 
 }

@@ -30,7 +30,6 @@ public class Client extends User {
 
         client_socket.receive(packet);
         client_socket.send(packet);
-
     }
 
     /**
@@ -57,7 +56,6 @@ public class Client extends User {
         } finally {
             client_socket.setSoTimeout(0);
         }
-
     }
 
     /**
@@ -65,11 +63,12 @@ public class Client extends User {
      * (Packet representation - opcode, block num and data)
      */
     public void send_update() throws IOException {
-        ArrayList<Packet> packets = Packet.createGameStatePackets(gameState);
+        int key = 390;
+        ArrayList<byte[]> packets = (ArrayList<byte[]>) Packet.createGamePackets(key, gameState);
         DatagramPacket send_buf;
 
-        for (Packet packet : packets) {
-            ByteBuffer buf = ByteBuffer.wrap(packet.toGameStatePacket());
+        for (byte[] packet : packets) {
+            ByteBuffer buf = ByteBuffer.wrap(packet);
             System.out.println("Client Send remaining: " + buf.remaining());
             byte[] bytes = new byte[buf.remaining()];
             buf.get(bytes);
@@ -89,7 +88,6 @@ public class Client extends User {
                     System.out.println("Socket timed out, try again");
                 }
             }
-
         }
     }
 
@@ -145,6 +143,7 @@ public class Client extends User {
                     break;
                 case UPDATE:
                     System.out.println("Send Game State");
+                    send_update();
                     break;
                 case RECONNECT:
                     System.out.println("Reconnect");
@@ -347,7 +346,7 @@ public class Client extends User {
      * A helper class for creating a new election.
      * It makes sure that the leader is not creating a new election.
      */
-    private void handleElectionTimeout() {
+    public void handleElectionTimeout() {
         if (raftState != RaftState.LEADER) {
             System.out.println("Election timeout occurred. Starting new election.");
             holdRAFTElection(); // Transition to Candidate and start election

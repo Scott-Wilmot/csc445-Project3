@@ -143,7 +143,7 @@ public class RoomViewController {
                     host.update_clients();
                 } else if (user instanceof Client) {
                     Client client = (Client) user;
-                    client.send_update();
+                    client.waiting();
                 }
                 System.out.println("Update sent");
                 return null;
