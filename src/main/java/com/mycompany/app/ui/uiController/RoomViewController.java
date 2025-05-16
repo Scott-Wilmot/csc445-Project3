@@ -6,6 +6,7 @@ import com.mycompany.app.communication.User;
 import com.mycompany.app.model.Card;
 import com.mycompany.app.model.GameState;
 import com.mycompany.app.ui.MainApp;
+import javafx.animation.*;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
@@ -15,9 +16,11 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.text.Text;
+import javafx.util.Duration;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 
 public class RoomViewController {
@@ -38,6 +41,8 @@ public class RoomViewController {
     // The id of the player who is in turn
     @FXML
     Text currentPlayerId;
+    @FXML
+    ImageView dougLeaImage;
 
 
     User user;
@@ -50,7 +55,7 @@ public class RoomViewController {
 
     @FXML
     public void initialize() throws Exception {
-
+        animateDougLea();
     }
 
     /**
@@ -266,4 +271,12 @@ public class RoomViewController {
         this.gameState = gameState;
     }
 
+    private final Random random = new Random();
+
+    private void animateDougLea() {
+        FadeTransition fadeOut = new FadeTransition(Duration.seconds(0.5), dougLeaImage);
+        fadeOut.setFromValue(1.0);  // fully visible
+        fadeOut.setToValue(0.0);    // fully transparent
+        fadeOut.play();
+    }
 }
