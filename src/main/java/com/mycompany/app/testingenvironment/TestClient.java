@@ -1,56 +1,40 @@
 package com.mycompany.app.testingenvironment;
 
+import com.mycompany.app.model.GameState;
+import com.mycompany.app.model.Player;
+
 import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Scanner;
 
 import static com.mycompany.app.testingenvironment.Config.BUFFER_SIZE;
 
 public class TestClient {
-    private DatagramSocket socket;
-    private InetAddress ip;
-    private ByteBuffer buffer;
+    public static void main(String[] args) {
+        GameState state = new GameState();
 
-    public TestClient(InetAddress ip) {
-        this.ip = ip;
-        buffer = ByteBuffer.allocate(BUFFER_SIZE);
-    }
+        state.addPlayer(0, new Player(new InetSocketAddress("localhost", 8080)));
+        state.addPlayer(1, new Player(new InetSocketAddress("localhost", 8080)));
+        state.addPlayer(2, new Player(new InetSocketAddress("localhost", 8080)));
+        state.addPlayer(3, new Player(new InetSocketAddress("localhost", 8080)));
 
-    void run() {
-        try {
-            socket = new DatagramSocket();
-            Scanner scanner = new Scanner(System.in);
+        state.removePlayer(1);
 
-            for (;;) {
-                System.out.println("Enter a message to send to the client.");
-                String message = scanner.nextLine();
-                buffer.put(message.getBytes());
-                DatagramPacket packet = new DatagramPacket(buffer.array(), buffer.limit(), ip, 8080);
-                socket.send(packet);
+        System.out.println(Arrays.toString(state.getPlayers().keySet().toArray(new Integer[0])));
 
-                System.out.println("sent packet");
+        System.out.println(state.getCurrentTurn());
+        state.nextTurn();
+        System.out.println(state.getCurrentTurn());
+        state.nextTurn();
+        System.out.println(state.getCurrentTurn());
+        state.nextTurn();
+        System.out.println(state.getCurrentTurn());
+        state.nextTurn();
+        System.out.println(state.getCurrentTurn());
+        state.nextTurn();
 
-                socket.receive(packet);
-                String serverMessage = new String(packet.getData(), 0, packet.getLength());
-                System.out.println("The server says: " + serverMessage);
-
-            }
-
-        } catch (SocketException e) {
-            System.err.println("DatagramSocket Corrupted");
-            throw new RuntimeException(e);
-
-        } catch (IOException e) {
-            System.err.println("Received Packet Corrupted");
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static void main(String[] args) throws UnknownHostException {
-        InetAddress ip = InetAddress.getByName("cs.oswego.edu");
-        TestClient testClient = new TestClient(ip);
-        testClient.run();
     }
 
 }

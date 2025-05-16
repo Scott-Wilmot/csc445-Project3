@@ -64,14 +64,15 @@ public class Host extends User {
     public void open_lobby() throws IOException, InterruptedException {
         int player_count = 1; // Defaults to 1, accounting for host
         ByteBuffer buf = ByteBuffer.allocate(4);
+        heartbeatSocket = new DatagramSocket(0);
 
         // This should not be the only method for holding off game start, since the loop terminates as soon as 4 players are in
         while (player_count < 4 && !game_started) {
             buf.clear();
             SocketAddress addr = host_channel.receive(buf);
-            buf.flip();
 
             if (addr != null) {
+                buf.flip();
                 InetSocketAddress ip = (InetSocketAddress) addr;
                 int port = ((InetSocketAddress) addr).getPort();
 
@@ -82,7 +83,7 @@ public class Host extends User {
 
                 SocketAddress target = new InetSocketAddress(ip.getAddress(), port);
                 buf.clear();
-                buf.put(Packet.createJoinPacket((short) 0, (short) player_count)); // Arbitrary 0 OpCode for join packets
+                buf.put(Packet.createJoinPacket((short) 0, (short) player_count, heartbeatSocket.getLocalPort())); // Arbitrary 0 OpCode for join packets
                 buf.flip();
                 host_channel.send(buf, target);
                 player_count++;
@@ -207,6 +208,11 @@ public class Host extends User {
 
         System.out.println("Exiting receive");
         gameState = Packet.processGameStatePackets(packets);
+    }
+
+    public void onClientDisconnect(int id) {
+        gameState.removePlayer(id);
+        clients.remove(id);
     }
 
     public String getPublicIP() {

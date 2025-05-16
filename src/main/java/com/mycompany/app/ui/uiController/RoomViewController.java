@@ -122,6 +122,7 @@ public class RoomViewController {
                         Host host = (Host) user;
                         host.receive_update();
                         gameState = host.getGameState();
+                        host.update_clients();
                     } else if (user instanceof Client) {
                         System.out.println("Client listening for update");
                         Client client = (Client) user;

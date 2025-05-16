@@ -92,9 +92,9 @@ public class GameState implements Serializable {
      *
      * @param playerId - the player exiting the game
      */
-    private void removePlayer(int playerId) {
+    public void removePlayer(int playerId) {
         players.remove(playerId);
-        playerCount--;
+        //playerCount--;
     }
 
     /**
@@ -114,9 +114,13 @@ public class GameState implements Serializable {
     public void nextTurn() {
         if (turnOrderReversed) {
             currentTurn = (currentTurn - 1) % playerCount;
+            if (!players.containsKey(currentTurn)) currentTurn = (currentTurn - 1) % playerCount;
             if (currentTurn == -1) currentTurn = playerCount - 1;
         } else {
             currentTurn = (currentTurn + 1) % playerCount;
+            if (!players.containsKey(currentTurn)) {
+                currentTurn = (currentTurn + 1) % playerCount;
+            }
         }
         initializeTurn();
     }

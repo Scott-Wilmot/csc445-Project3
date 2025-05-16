@@ -92,16 +92,19 @@ public class Packet {
 
     /**
      * Takes in an OpCode and ID as shorts (2 Bytes) to place into a byte array.
+     * Also adds a heartbeatPort for the client to connect to. port represented as an int
+     * Packet has a total size of 8 Bytes
      * @param opCode
      * @param id
      * @return
      * @throws IOException
      */
-    public static byte[] createJoinPacket(short opCode, short id) throws IOException {
+    public static byte[] createJoinPacket(short opCode, short id, int heartbeatPort) throws IOException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(bos);
         dos.writeShort(opCode);
         dos.writeShort(id);
+        dos.writeInt(heartbeatPort);
         return bos.toByteArray();
     }
 
