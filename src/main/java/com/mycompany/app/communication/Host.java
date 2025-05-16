@@ -63,7 +63,7 @@ public class Host extends User {
      */
     public void open_lobby() throws IOException, InterruptedException {
         int player_count = 1; // Defaults to 1, accounting for host
-        ByteBuffer buf = ByteBuffer.allocate(4);
+        ByteBuffer buf = ByteBuffer.allocate(8);
         heartbeatSocket = new DatagramSocket(0);
 
         // This should not be the only method for holding off game start, since the loop terminates as soon as 4 players are in

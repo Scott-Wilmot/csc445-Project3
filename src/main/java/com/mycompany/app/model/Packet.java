@@ -16,6 +16,7 @@ public class Packet {
 
     public short opCode;
     public short id;
+    public int port;
     public short block_num;
     public byte[] data;
 
@@ -47,9 +48,10 @@ public class Packet {
      * @param opCode
      * @param id
      */
-    private Packet(short opCode, short id) {
+    private Packet(short opCode, short id, int port) {
         this.opCode = opCode;
         this.id = id;
+        this.port = port;
     }
 
     /**
@@ -117,7 +119,8 @@ public class Packet {
         ByteBuffer buf = ByteBuffer.wrap(bytes);
         short opCode = buf.getShort();
         short id = buf.getShort();
-        return new Packet(opCode, id);
+        int port = buf.getInt();
+        return new Packet(opCode, id, port);
     }
 
     /**
