@@ -61,6 +61,8 @@ public class RoomViewController {
         // Display current User ID
         if (userId == null) userId = new Text();
         userId.setText(String.valueOf(user.getID()));
+        currentPlayerId.setText(String.valueOf(gameState.getCurrentPlayer().getID()));
+
 
         // Current user cards
         if (userCardsGroup == null) this.userCardsGroup = new Group(); // Initializes group if not initialized
